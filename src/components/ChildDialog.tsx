@@ -36,6 +36,8 @@ const ChildDialog = ({ open, onOpenChange, child, onSuccess }: ChildDialogProps)
     guardian_name: "",
     contact_number: "",
     admission_date: new Date().toISOString().split("T")[0],
+    class: "",
+    admission_number: "",
   });
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
@@ -48,6 +50,8 @@ const ChildDialog = ({ open, onOpenChange, child, onSuccess }: ChildDialogProps)
         guardian_name: child.guardian_name,
         contact_number: child.contact_number,
         admission_date: child.admission_date,
+        class: child.class || "",
+        admission_number: child.admission_number || "",
       });
     } else {
       setFormData({
@@ -56,6 +60,8 @@ const ChildDialog = ({ open, onOpenChange, child, onSuccess }: ChildDialogProps)
         guardian_name: "",
         contact_number: "",
         admission_date: new Date().toISOString().split("T")[0],
+        class: "",
+        admission_number: "",
       });
     }
   }, [child, open]);
@@ -78,6 +84,8 @@ const ChildDialog = ({ open, onOpenChange, child, onSuccess }: ChildDialogProps)
             guardian_name: validated.guardian_name,
             contact_number: validated.contact_number,
             admission_date: validated.admission_date,
+            class: formData.class || null,
+            admission_number: formData.admission_number || null,
           })
           .eq("id", child.id);
 
@@ -94,6 +102,8 @@ const ChildDialog = ({ open, onOpenChange, child, onSuccess }: ChildDialogProps)
           guardian_name: validated.guardian_name,
           contact_number: validated.contact_number,
           admission_date: validated.admission_date,
+          class: formData.class || null,
+          admission_number: formData.admission_number || null,
         }]);
 
         if (error) throw error;
@@ -181,6 +191,24 @@ const ChildDialog = ({ open, onOpenChange, child, onSuccess }: ChildDialogProps)
               type="date"
               value={formData.admission_date}
               onChange={(e) => setFormData({ ...formData, admission_date: e.target.value })}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="class">Class (Optional)</Label>
+            <Input
+              id="class"
+              value={formData.class}
+              onChange={(e) => setFormData({ ...formData, class: e.target.value })}
+              placeholder="e.g., Pre-K, Kindergarten"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="admission_number">Admission Number (Optional)</Label>
+            <Input
+              id="admission_number"
+              value={formData.admission_number}
+              onChange={(e) => setFormData({ ...formData, admission_number: e.target.value })}
+              placeholder="e.g., ADM001"
             />
           </div>
         </div>

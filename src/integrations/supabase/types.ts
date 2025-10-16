@@ -17,7 +17,9 @@ export type Database = {
       children: {
         Row: {
           admission_date: string
+          admission_number: string | null
           age: number
+          class: string | null
           contact_number: string
           created_at: string
           guardian_name: string
@@ -27,7 +29,9 @@ export type Database = {
         }
         Insert: {
           admission_date?: string
+          admission_number?: string | null
           age: number
+          class?: string | null
           contact_number: string
           created_at?: string
           guardian_name: string
@@ -37,7 +41,9 @@ export type Database = {
         }
         Update: {
           admission_date?: string
+          admission_number?: string | null
           age?: number
+          class?: string | null
           contact_number?: string
           created_at?: string
           guardian_name?: string
@@ -50,8 +56,11 @@ export type Database = {
       payments: {
         Row: {
           amount: number
+          arrival_time: string | null
+          attendance_status: string | null
           child_id: string
           created_at: string
+          debt_amount: number | null
           id: string
           note: string | null
           payment_date: string
@@ -60,8 +69,11 @@ export type Database = {
         }
         Insert: {
           amount: number
+          arrival_time?: string | null
+          attendance_status?: string | null
           child_id: string
           created_at?: string
+          debt_amount?: number | null
           id?: string
           note?: string | null
           payment_date?: string
@@ -70,8 +82,11 @@ export type Database = {
         }
         Update: {
           amount?: number
+          arrival_time?: string | null
+          attendance_status?: string | null
           child_id?: string
           created_at?: string
+          debt_amount?: number | null
           id?: string
           note?: string | null
           payment_date?: string

@@ -1,9 +1,10 @@
 import { ReactNode } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Baby, LayoutDashboard, Users, DollarSign, LogOut } from "lucide-react";
+import { Baby, Users, DollarSign, LogOut, FileText, Moon, Sun } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useTheme } from "@/contexts/ThemeContext";
 
 interface LayoutProps {
   children: ReactNode;
@@ -13,6 +14,14 @@ const Layout = ({ children }: LayoutProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
+  const { theme, toggleTheme } = useTheme();
+
+  const handleThemeToggle = () => {
+    toggleTheme();
+    toast({
+      title: theme === "light" ? "🌗 Switched to Dark Mode" : "☀️ Switched to Light Mode",
+    });
+  };
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -24,9 +33,9 @@ const Layout = ({ children }: LayoutProps) => {
   };
 
   const navItems = [
-    { path: "/", label: "Dashboard", icon: LayoutDashboard },
     { path: "/children", label: "Children", icon: Users },
-    { path: "/payments", label: "Payments", icon: DollarSign },
+    { path: "/today", label: "Today's Payment", icon: DollarSign },
+    { path: "/reports", label: "Reports", icon: FileText },
   ];
 
   return (
@@ -43,10 +52,15 @@ const Layout = ({ children }: LayoutProps) => {
               <p className="text-xs text-muted-foreground">Admin Portal</p>
             </div>
           </div>
-          <Button variant="outline" size="sm" onClick={handleLogout}>
-            <LogOut className="mr-2 h-4 w-4" />
-            Logout
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="sm" onClick={handleThemeToggle}>
+              {theme === "light" ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
+            </Button>
+            <Button variant="outline" size="sm" onClick={handleLogout}>
+              <LogOut className="mr-2 h-4 w-4" />
+              Logout
+            </Button>
+          </div>
         </div>
       </header>
 

@@ -6,6 +6,7 @@ import { Plus, Edit, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import ChildDialog from "@/components/ChildDialog";
+import { useNavigate } from "react-router-dom";
 import {
   Table,
   TableBody,
@@ -32,6 +33,17 @@ interface Child {
   guardian_name: string;
   contact_number: string;
   admission_date: string;
+  class: string | null;
+  admission_number: string | null;
+}
+
+interface TodayAttendance {
+  [childId: string]: {
+    present: boolean;
+    absent: boolean;
+    paid: boolean;
+    unpaid: boolean;
+  };
 }
 
 const Children = () => {
@@ -41,7 +53,9 @@ const Children = () => {
   const [selectedChild, setSelectedChild] = useState<Child | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [childToDelete, setChildToDelete] = useState<string | null>(null);
+  const [attendance, setAttendance] = useState<TodayAttendance>({});
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchChildren();
@@ -100,6 +114,111 @@ const Children = () => {
     }
   };
 
+  const handleAttendance = async (childId: string, childName: string, status: "present" | "absent") => {
+    const today = new Date().toISOString().split("T")[0];
+    const time = new Date().toLocaleTimeString();
+    
+    try {
+      const amount = status === "present" ? -150 : 0;
+      const note = status === "present" 
+        ? `Child arrived at ${time}` 
+        : "Child did not report";
+
+      const { error } = await supabase
+        .from("payments")
+        .insert({
+          child_id: childId,
+          amount: Math.abs(amount),
+          payment_date: today,
+          status: "unpaid",
+          note,
+          attendance_status: status,
+          arrival_time: status === "present" ? new Date().toISOString() : null,
+          debt_amount: Math.abs(amount),
+        });
+
+      if (error) throw error;
+
+      setAttendance(prev => ({
+        ...prev,
+        [childId]: {
+          ...prev[childId],
+          [status]: true,
+          present: status === "present",
+          absent: status === "absent",
+        }
+      }));
+
+      toast({
+        title: status === "present" ? "✅ Child marked present" : "⚠️ Child marked absent",
+        description: status === "present" 
+          ? `${childName} — Ksh 150 pending` 
+          : `${childName} did not report`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handlePayment = async (childId: string, childName: string, status: "paid" | "unpaid") => {
+    const today = new Date().toISOString().split("T")[0];
+    
+    try {
+      // Find today's payment record
+      const { data: existingPayment } = await supabase
+        .from("payments")
+        .select("*")
+        .eq("child_id", childId)
+        .eq("payment_date", today)
+        .single();
+
+      if (!existingPayment) {
+        toast({
+          title: "Error",
+          description: "Please mark attendance first",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const { error } = await supabase
+        .from("payments")
+        .update({
+          status,
+          debt_amount: status === "paid" ? 0 : 150,
+        })
+        .eq("id", existingPayment.id);
+
+      if (error) throw error;
+
+      setAttendance(prev => ({
+        ...prev,
+        [childId]: {
+          ...prev[childId],
+          paid: status === "paid",
+          unpaid: status === "unpaid",
+        }
+      }));
+
+      toast({
+        title: status === "paid" ? "💰 Payment recorded" : "🚨 Payment not received",
+        description: status === "paid"
+          ? `${childName} — Ksh 150`
+          : `${childName} — debt recorded`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -129,49 +248,103 @@ const Children = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Age</TableHead>
-                    <TableHead>Guardian</TableHead>
-                    <TableHead>Contact</TableHead>
-                    <TableHead>Admission Date</TableHead>
+                    <TableHead>Child Name</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Attendance</TableHead>
+                    <TableHead>Payment</TableHead>
+                    <TableHead>Amount</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {children.map((child) => (
-                    <TableRow key={child.id}>
-                      <TableCell className="font-medium">{child.name}</TableCell>
-                      <TableCell>
-                        <Badge variant="secondary">{child.age} yrs</Badge>
-                      </TableCell>
-                      <TableCell>{child.guardian_name}</TableCell>
-                      <TableCell>{child.contact_number}</TableCell>
-                      <TableCell>
-                        {new Date(child.admission_date).toLocaleDateString()}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleEdit(child)}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                              setChildToDelete(child.id);
-                              setDeleteDialogOpen(true);
-                            }}
-                          >
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {children.map((child) => {
+                    const childAttendance = attendance[child.id] || { present: false, absent: false, paid: false, unpaid: false };
+                    const today = new Date().toLocaleDateString();
+                    
+                    return (
+                      <TableRow key={child.id}>
+                        <TableCell 
+                          className="font-medium cursor-pointer hover:text-primary underline"
+                          onClick={() => navigate(`/child/${child.id}`)}
+                        >
+                          {child.name}
+                        </TableCell>
+                        <TableCell>{today}</TableCell>
+                        <TableCell>
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              variant={childAttendance.present ? "default" : "outline"}
+                              className={childAttendance.present ? "bg-primary" : ""}
+                              onClick={() => handleAttendance(child.id, child.name, "present")}
+                              disabled={childAttendance.present || childAttendance.absent}
+                            >
+                              Present
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant={childAttendance.absent ? "secondary" : "outline"}
+                              onClick={() => handleAttendance(child.id, child.name, "absent")}
+                              disabled={childAttendance.present || childAttendance.absent}
+                            >
+                              Absent
+                            </Button>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              className={childAttendance.paid ? "bg-success hover:bg-success/90" : ""}
+                              variant={childAttendance.paid ? "default" : "outline"}
+                              onClick={() => handlePayment(child.id, child.name, "paid")}
+                              disabled={!childAttendance.present || childAttendance.paid || childAttendance.unpaid}
+                            >
+                              Paid
+                            </Button>
+                            <Button
+                              size="sm"
+                              className={childAttendance.unpaid ? "bg-destructive hover:bg-destructive/90 text-destructive-foreground" : ""}
+                              variant={childAttendance.unpaid ? "default" : "outline"}
+                              onClick={() => handlePayment(child.id, child.name, "unpaid")}
+                              disabled={!childAttendance.present || childAttendance.paid || childAttendance.unpaid}
+                            >
+                              Unpaid
+                            </Button>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          {childAttendance.present && (
+                            <span className={childAttendance.paid ? "text-success font-semibold" : "text-destructive font-semibold"}>
+                              {childAttendance.paid ? "" : "-"}Ksh 150.00
+                            </span>
+                          )}
+                          {childAttendance.absent && <span className="text-muted-foreground">Ksh 0.00</span>}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleEdit(child)}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                setChildToDelete(child.id);
+                                setDeleteDialogOpen(true);
+                              }}
+                            >
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </div>
