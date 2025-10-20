@@ -33,9 +33,9 @@ const Layout = ({ children }: LayoutProps) => {
   };
 
   const navItems = [
+    { path: "/today", label: "Today", icon: DollarSign },
     { path: "/children", label: "Children", icon: Users },
-    { path: "/today", label: "Today's Payment", icon: DollarSign },
-    { path: "/reports", label: "Reports", icon: FileText },
+    { path: "/reports", label: "Dashboard", icon: FileText },
   ];
 
   return (
@@ -48,8 +48,8 @@ const Layout = ({ children }: LayoutProps) => {
               <Baby className="h-6 w-6 text-primary" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-foreground">Daycare Management</h1>
-              <p className="text-xs text-muted-foreground">Admin Portal</p>
+              <h1 className="text-xl font-bold text-foreground">Mama Care</h1>
+              <p className="text-xs text-muted-foreground">Daycare Management System</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
