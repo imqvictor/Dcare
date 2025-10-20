@@ -20,7 +20,6 @@ const childSchema = z.object({
   guardian_name: z.string().trim().min(1, { message: "Guardian name is required" }).max(100),
   contact_number: z.string().trim().min(1, { message: "Contact number is required" }).max(20),
   admission_date: z.string().min(1, { message: "Admission date is required" }),
-  amount_charged: z.number().min(0, { message: "Amount must be at least 0" }),
 });
 
 interface ChildDialogProps {
@@ -39,7 +38,6 @@ const ChildDialog = ({ open, onOpenChange, child, onSuccess }: ChildDialogProps)
     admission_date: new Date().toISOString().split("T")[0],
     class: "",
     admission_number: "",
-    amount_charged: "150",
   });
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
@@ -54,7 +52,6 @@ const ChildDialog = ({ open, onOpenChange, child, onSuccess }: ChildDialogProps)
         admission_date: child.admission_date,
         class: child.class || "",
         admission_number: child.admission_number || "",
-        amount_charged: child.amount_charged?.toString() || "150",
       });
     } else {
       setFormData({
@@ -65,7 +62,6 @@ const ChildDialog = ({ open, onOpenChange, child, onSuccess }: ChildDialogProps)
         admission_date: new Date().toISOString().split("T")[0],
         class: "",
         admission_number: "",
-        amount_charged: "150",
       });
     }
   }, [child, open]);
@@ -75,7 +71,6 @@ const ChildDialog = ({ open, onOpenChange, child, onSuccess }: ChildDialogProps)
       const validated = childSchema.parse({
         ...formData,
         age: parseInt(formData.age),
-        amount_charged: parseFloat(formData.amount_charged),
       });
 
       setLoading(true);
@@ -91,7 +86,6 @@ const ChildDialog = ({ open, onOpenChange, child, onSuccess }: ChildDialogProps)
             admission_date: validated.admission_date,
             class: formData.class || null,
             admission_number: formData.admission_number || null,
-            amount_charged: validated.amount_charged,
           })
           .eq("id", child.id);
 
@@ -110,14 +104,13 @@ const ChildDialog = ({ open, onOpenChange, child, onSuccess }: ChildDialogProps)
           admission_date: validated.admission_date,
           class: formData.class || null,
           admission_number: formData.admission_number || null,
-          amount_charged: validated.amount_charged,
         }]);
 
         if (error) throw error;
 
         toast({
           title: "Success",
-          description: "Child added successfully!",
+          description: "Child added successfully",
         });
       }
 
@@ -218,25 +211,13 @@ const ChildDialog = ({ open, onOpenChange, child, onSuccess }: ChildDialogProps)
               placeholder="e.g., ADM001"
             />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="amount_charged">Amount Charged (KES)</Label>
-            <Input
-              id="amount_charged"
-              type="number"
-              value={formData.amount_charged}
-              onChange={(e) => setFormData({ ...formData, amount_charged: e.target.value })}
-              placeholder="150"
-              min="0"
-              step="0.01"
-            />
-          </div>
         </div>
-        <DialogFooter className="flex-col sm:flex-row gap-2">
-          <Button variant="outline" onClick={() => onOpenChange(false)} className="w-full sm:w-auto">
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit} disabled={loading} className="w-full sm:w-auto">
-            {loading ? "Saving..." : child ? "Update Child" : "Confirm Add Child"}
+          <Button onClick={handleSubmit} disabled={loading}>
+            {loading ? "Saving..." : child ? "Update" : "Add"}
           </Button>
         </DialogFooter>
       </DialogContent>
