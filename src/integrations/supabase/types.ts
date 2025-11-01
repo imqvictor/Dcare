@@ -25,6 +25,7 @@ export type Database = {
           guardian_name: string
           id: string
           name: string
+          payment_amount: number
           updated_at: string
         }
         Insert: {
@@ -37,6 +38,7 @@ export type Database = {
           guardian_name: string
           id?: string
           name: string
+          payment_amount?: number
           updated_at?: string
         }
         Update: {
@@ -49,6 +51,7 @@ export type Database = {
           guardian_name?: string
           id?: string
           name?: string
+          payment_amount?: number
           updated_at?: string
         }
         Relationships: []

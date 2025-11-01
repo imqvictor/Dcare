@@ -28,6 +28,7 @@ interface Child {
   admission_date: string;
   class: string | null;
   admission_number: string | null;
+  payment_amount: number;
 }
 
 interface TodayAttendance {
@@ -109,12 +110,12 @@ const Children = () => {
     }
   };
 
-  const handleAttendance = async (childId: string, childName: string, status: "present" | "absent") => {
+  const handleAttendance = async (childId: string, childName: string, status: "present" | "absent", paymentAmount: number) => {
     const today = new Date().toISOString().split("T")[0];
     const time = new Date().toLocaleTimeString();
     
     try {
-      const amount = status === "present" ? -150 : 0;
+      const amount = status === "present" ? paymentAmount : 0;
       const note = status === "present" 
         ? `Child arrived at ${time}` 
         : "Child did not report";
@@ -147,7 +148,7 @@ const Children = () => {
       toast({
         title: status === "present" ? "✅ Child marked present" : "⚠️ Child marked absent",
         description: status === "present" 
-          ? `${childName} — Ksh 150 pending` 
+          ? `${childName} — Ksh ${paymentAmount.toFixed(2)} pending` 
           : `${childName} did not report`,
       });
     } catch (error: any) {
@@ -159,7 +160,7 @@ const Children = () => {
     }
   };
 
-  const handlePayment = async (childId: string, childName: string, status: "paid" | "unpaid") => {
+  const handlePayment = async (childId: string, childName: string, status: "paid" | "unpaid", paymentAmount: number) => {
     const today = new Date().toISOString().split("T")[0];
     
     try {
@@ -184,7 +185,7 @@ const Children = () => {
         .from("payments")
         .update({
           status,
-          debt_amount: status === "paid" ? 0 : 150,
+          debt_amount: status === "paid" ? 0 : paymentAmount,
         })
         .eq("id", existingPayment.id);
 
@@ -202,7 +203,7 @@ const Children = () => {
       toast({
         title: status === "paid" ? "💰 Payment recorded" : "🚨 Payment not received",
         description: status === "paid"
-          ? `${childName} — Ksh 150`
+          ? `${childName} — Ksh ${paymentAmount.toFixed(2)}`
           : `${childName} — debt recorded`,
       });
     } catch (error: any) {
@@ -306,13 +307,9 @@ const Children = () => {
                   <div className="mb-6">
                     <p className="text-sm text-muted-foreground mb-1">Payment Amount</p>
                     <p className="text-xl font-semibold">
-                      {childAttendance.present ? (
-                        <span className={childAttendance.paid ? "text-primary" : "text-destructive"}>
-                          Ksh 150.00
-                        </span>
-                      ) : (
-                        <span className="text-muted-foreground">Ksh 0.00</span>
-                      )}
+                      <span className={childAttendance.paid ? "text-primary" : "text-foreground"}>
+                        Ksh {child.payment_amount.toFixed(2)}
+                      </span>
                     </p>
                   </div>
 
@@ -321,7 +318,7 @@ const Children = () => {
                       size="sm"
                       variant={childAttendance.present ? "default" : "outline"}
                       className={childAttendance.present ? "bg-green-600 hover:bg-green-700" : ""}
-                      onClick={() => handleAttendance(child.id, child.name, "present")}
+                      onClick={() => handleAttendance(child.id, child.name, "present", child.payment_amount)}
                       disabled={childAttendance.present || childAttendance.absent}
                     >
                       🟢 Present
@@ -330,7 +327,7 @@ const Children = () => {
                       size="sm"
                       variant={childAttendance.absent ? "default" : "outline"}
                       className={childAttendance.absent ? "bg-red-600 hover:bg-red-700" : ""}
-                      onClick={() => handleAttendance(child.id, child.name, "absent")}
+                      onClick={() => handleAttendance(child.id, child.name, "absent", child.payment_amount)}
                       disabled={childAttendance.present || childAttendance.absent}
                     >
                       🔴 Absent
@@ -339,7 +336,7 @@ const Children = () => {
                       size="sm"
                       variant={childAttendance.paid ? "default" : "outline"}
                       className={childAttendance.paid ? "bg-blue-600 hover:bg-blue-700" : ""}
-                      onClick={() => handlePayment(child.id, child.name, "paid")}
+                      onClick={() => handlePayment(child.id, child.name, "paid", child.payment_amount)}
                       disabled={!childAttendance.present || childAttendance.paid || childAttendance.unpaid}
                     >
                       💰 Paid
@@ -348,7 +345,7 @@ const Children = () => {
                       size="sm"
                       variant={childAttendance.unpaid ? "default" : "outline"}
                       className={childAttendance.unpaid ? "bg-gray-600 hover:bg-gray-700" : ""}
-                      onClick={() => handlePayment(child.id, child.name, "unpaid")}
+                      onClick={() => handlePayment(child.id, child.name, "unpaid", child.payment_amount)}
                       disabled={!childAttendance.present || childAttendance.paid || childAttendance.unpaid}
                     >
                       ⚪ Unpaid

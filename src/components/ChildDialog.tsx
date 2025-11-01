@@ -15,11 +15,13 @@ import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
 
 const childSchema = z.object({
-  name: z.string().trim().min(1, { message: "Name is required" }).max(100),
-  age: z.number().min(1, { message: "Age must be at least 1" }).max(17, { message: "Age must be less than 18" }),
+  first_name: z.string().trim().min(1, { message: "First name is required" }).max(50),
+  last_name: z.string().trim().min(1, { message: "Last name is required" }).max(50),
+  admission_number: z.string().trim().min(1, { message: "Admission number is required" }).max(20),
   guardian_name: z.string().trim().min(1, { message: "Guardian name is required" }).max(100),
-  contact_number: z.string().trim().min(1, { message: "Contact number is required" }).max(20),
+  contact_number: z.string().trim().min(1, { message: "Guardian phone is required" }).max(20),
   admission_date: z.string().min(1, { message: "Admission date is required" }),
+  payment_amount: z.number().min(0, { message: "Payment amount must be 0 or greater" }),
 });
 
 interface ChildDialogProps {
@@ -31,37 +33,38 @@ interface ChildDialogProps {
 
 const ChildDialog = ({ open, onOpenChange, child, onSuccess }: ChildDialogProps) => {
   const [formData, setFormData] = useState({
-    name: "",
-    age: "",
+    first_name: "",
+    last_name: "",
+    admission_number: "",
     guardian_name: "",
     contact_number: "",
     admission_date: new Date().toISOString().split("T")[0],
-    class: "",
-    admission_number: "",
+    payment_amount: "",
   });
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
     if (child) {
+      const nameParts = child.name.split(" ");
       setFormData({
-        name: child.name,
-        age: child.age.toString(),
+        first_name: nameParts[0] || "",
+        last_name: nameParts.slice(1).join(" ") || "",
+        admission_number: child.admission_number || "",
         guardian_name: child.guardian_name,
         contact_number: child.contact_number,
         admission_date: child.admission_date,
-        class: child.class || "",
-        admission_number: child.admission_number || "",
+        payment_amount: child.payment_amount?.toString() || "",
       });
     } else {
       setFormData({
-        name: "",
-        age: "",
+        first_name: "",
+        last_name: "",
+        admission_number: "",
         guardian_name: "",
         contact_number: "",
         admission_date: new Date().toISOString().split("T")[0],
-        class: "",
-        admission_number: "",
+        payment_amount: "",
       });
     }
   }, [child, open]);
@@ -70,22 +73,24 @@ const ChildDialog = ({ open, onOpenChange, child, onSuccess }: ChildDialogProps)
     try {
       const validated = childSchema.parse({
         ...formData,
-        age: parseInt(formData.age),
+        payment_amount: parseFloat(formData.payment_amount),
       });
 
       setLoading(true);
+
+      const fullName = `${validated.first_name} ${validated.last_name}`.trim();
 
       if (child) {
         const { error } = await supabase
           .from("children")
           .update({
-            name: validated.name,
-            age: validated.age,
+            name: fullName,
+            age: 0,
             guardian_name: validated.guardian_name,
             contact_number: validated.contact_number,
             admission_date: validated.admission_date,
-            class: formData.class || null,
-            admission_number: formData.admission_number || null,
+            admission_number: validated.admission_number,
+            payment_amount: validated.payment_amount,
           })
           .eq("id", child.id);
 
@@ -97,20 +102,20 @@ const ChildDialog = ({ open, onOpenChange, child, onSuccess }: ChildDialogProps)
         });
       } else {
         const { error } = await supabase.from("children").insert([{
-          name: validated.name,
-          age: validated.age,
+          name: fullName,
+          age: 0,
           guardian_name: validated.guardian_name,
           contact_number: validated.contact_number,
           admission_date: validated.admission_date,
-          class: formData.class || null,
-          admission_number: formData.admission_number || null,
+          admission_number: validated.admission_number,
+          payment_amount: validated.payment_amount,
         }]);
 
         if (error) throw error;
 
         toast({
           title: "Success",
-          description: "Child added successfully",
+          description: "Child registered successfully",
         });
       }
 
@@ -137,87 +142,111 @@ const ChildDialog = ({ open, onOpenChange, child, onSuccess }: ChildDialogProps)
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>{child ? "Edit Child" : "Add New Child"}</DialogTitle>
-          <DialogDescription>
-            {child ? "Update child information" : "Enter child details below"}
+      <DialogContent className="sm:max-w-2xl bg-[#0f1729] border-[#1e2a47]">
+        <DialogHeader className="text-center">
+          <DialogTitle className="text-2xl font-bold text-white">{child ? "Edit Child" : "Add New Child"}</DialogTitle>
+          <DialogDescription className="text-center bg-[#1a2438] rounded-lg p-4 mt-4 text-gray-300">
+            Child Registration Form
           </DialogDescription>
         </DialogHeader>
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="name">Name</Label>
-            <Input
-              id="name"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              placeholder="John Doe"
-            />
+        <div className="space-y-4 mt-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="first_name" className="text-gray-200">First Name*</Label>
+              <Input
+                id="first_name"
+                value={formData.first_name}
+                onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
+                placeholder="John"
+                className="bg-[#1a2438] border-[#2d3b56] text-white placeholder:text-gray-500 focus:border-primary focus:ring-primary"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="last_name" className="text-gray-200">Last Name*</Label>
+              <Input
+                id="last_name"
+                value={formData.last_name}
+                onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
+                placeholder="Doe"
+                className="bg-[#1a2438] border-[#2d3b56] text-white placeholder:text-gray-500 focus:border-primary focus:ring-primary"
+              />
+            </div>
           </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="admission_number" className="text-gray-200">Admission Number*</Label>
+              <Input
+                id="admission_number"
+                value={formData.admission_number}
+                onChange={(e) => setFormData({ ...formData, admission_number: e.target.value })}
+                placeholder="ADM001"
+                className="bg-[#1a2438] border-[#2d3b56] text-white placeholder:text-gray-500 focus:border-primary focus:ring-primary"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="admission_date" className="text-gray-200">Admission Date*</Label>
+              <Input
+                id="admission_date"
+                type="date"
+                value={formData.admission_date}
+                onChange={(e) => setFormData({ ...formData, admission_date: e.target.value })}
+                className="bg-[#1a2438] border-[#2d3b56] text-white placeholder:text-gray-500 focus:border-primary focus:ring-primary"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="guardian_name" className="text-gray-200">Guardian Name*</Label>
+              <Input
+                id="guardian_name"
+                value={formData.guardian_name}
+                onChange={(e) => setFormData({ ...formData, guardian_name: e.target.value })}
+                placeholder="Jane Doe"
+                className="bg-[#1a2438] border-[#2d3b56] text-white placeholder:text-gray-500 focus:border-primary focus:ring-primary"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="contact_number" className="text-gray-200">Guardian Phone*</Label>
+              <Input
+                id="contact_number"
+                value={formData.contact_number}
+                onChange={(e) => setFormData({ ...formData, contact_number: e.target.value })}
+                placeholder="+254712345678"
+                className="bg-[#1a2438] border-[#2d3b56] text-white placeholder:text-gray-500 focus:border-primary focus:ring-primary"
+              />
+            </div>
+          </div>
+
           <div className="space-y-2">
-            <Label htmlFor="age">Age</Label>
+            <Label htmlFor="payment_amount" className="text-gray-200">Payment Amount (KSH)*</Label>
             <Input
-              id="age"
+              id="payment_amount"
               type="number"
-              value={formData.age}
-              onChange={(e) => setFormData({ ...formData, age: e.target.value })}
-              placeholder="3"
-              min="1"
-              max="17"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="guardian_name">Guardian Name</Label>
-            <Input
-              id="guardian_name"
-              value={formData.guardian_name}
-              onChange={(e) => setFormData({ ...formData, guardian_name: e.target.value })}
-              placeholder="Jane Doe"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="contact_number">Contact Number</Label>
-            <Input
-              id="contact_number"
-              value={formData.contact_number}
-              onChange={(e) => setFormData({ ...formData, contact_number: e.target.value })}
-              placeholder="+1234567890"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="admission_date">Admission Date</Label>
-            <Input
-              id="admission_date"
-              type="date"
-              value={formData.admission_date}
-              onChange={(e) => setFormData({ ...formData, admission_date: e.target.value })}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="class">Class (Optional)</Label>
-            <Input
-              id="class"
-              value={formData.class}
-              onChange={(e) => setFormData({ ...formData, class: e.target.value })}
-              placeholder="e.g., Pre-K, Kindergarten"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="admission_number">Admission Number (Optional)</Label>
-            <Input
-              id="admission_number"
-              value={formData.admission_number}
-              onChange={(e) => setFormData({ ...formData, admission_number: e.target.value })}
-              placeholder="e.g., ADM001"
+              step="0.01"
+              min="0"
+              value={formData.payment_amount}
+              onChange={(e) => setFormData({ ...formData, payment_amount: e.target.value })}
+              placeholder="500.00"
+              className="bg-[#1a2438] border-[#2d3b56] text-white placeholder:text-gray-500 focus:border-primary focus:ring-primary"
             />
           </div>
         </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+        <DialogFooter className="mt-6 flex justify-center gap-4">
+          <Button 
+            variant="outline" 
+            onClick={() => onOpenChange(false)}
+            className="bg-transparent border-[#2d3b56] text-gray-300 hover:bg-[#1a2438] hover:text-white"
+          >
             Cancel
           </Button>
-          <Button onClick={handleSubmit} disabled={loading}>
-            {loading ? "Saving..." : child ? "Update" : "Add"}
+          <Button 
+            onClick={handleSubmit} 
+            disabled={loading}
+            className="bg-primary hover:bg-primary/90 text-white px-8"
+          >
+            {loading ? "Saving..." : child ? "Update" : "Register"}
           </Button>
         </DialogFooter>
       </DialogContent>
