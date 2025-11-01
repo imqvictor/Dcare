@@ -1,20 +1,13 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Edit, Trash2 } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Plus, Search } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import ChildDialog from "@/components/ChildDialog";
 import { useNavigate } from "react-router-dom";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -54,6 +47,8 @@ const Children = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [childToDelete, setChildToDelete] = useState<string | null>(null);
   const [attendance, setAttendance] = useState<TodayAttendance>({});
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterStatus, setFilterStatus] = useState<"all" | "paid" | "unpaid">("all");
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -219,138 +214,152 @@ const Children = () => {
     }
   };
 
+  const filteredChildren = children.filter((child) => {
+    const childAttendance = attendance[child.id] || { present: false, absent: false, paid: false, unpaid: false };
+    const matchesSearch = child.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         child.guardian_name.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesFilter = filterStatus === "all" ||
+                         (filterStatus === "paid" && childAttendance.paid) ||
+                         (filterStatus === "unpaid" && childAttendance.unpaid);
+    return matchesSearch && matchesFilter;
+  });
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-6">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-3xl font-bold">Children</h2>
           <p className="text-muted-foreground">Manage registered children</p>
         </div>
-        <Button onClick={() => { setSelectedChild(null); setDialogOpen(true); }}>
+        <Button 
+          onClick={() => { setSelectedChild(null); setDialogOpen(true); }}
+          className="rounded-full"
+        >
           <Plus className="mr-2 h-4 w-4" />
           Add Child
         </Button>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Registered Children</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {loading ? (
-            <div className="text-center py-8">Loading...</div>
-          ) : children.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              No children registered yet
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Child Name</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Attendance</TableHead>
-                    <TableHead>Payment</TableHead>
-                    <TableHead>Amount</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {children.map((child) => {
-                    const childAttendance = attendance[child.id] || { present: false, absent: false, paid: false, unpaid: false };
-                    const today = new Date().toLocaleDateString();
-                    
-                    return (
-                      <TableRow key={child.id}>
-                        <TableCell 
-                          className="font-medium cursor-pointer hover:text-primary underline"
-                          onClick={() => navigate(`/child/${child.id}`)}
-                        >
-                          {child.name}
-                        </TableCell>
-                        <TableCell>{today}</TableCell>
-                        <TableCell>
-                          <div className="flex gap-2">
-                            <Button
-                              size="sm"
-                              variant={childAttendance.present ? "default" : "outline"}
-                              className={childAttendance.present ? "bg-primary" : ""}
-                              onClick={() => handleAttendance(child.id, child.name, "present")}
-                              disabled={childAttendance.present || childAttendance.absent}
-                            >
-                              Present
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant={childAttendance.absent ? "secondary" : "outline"}
-                              onClick={() => handleAttendance(child.id, child.name, "absent")}
-                              disabled={childAttendance.present || childAttendance.absent}
-                            >
-                              Absent
-                            </Button>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex gap-2">
-                            <Button
-                              size="sm"
-                              className={childAttendance.paid ? "bg-success hover:bg-success/90" : ""}
-                              variant={childAttendance.paid ? "default" : "outline"}
-                              onClick={() => handlePayment(child.id, child.name, "paid")}
-                              disabled={!childAttendance.present || childAttendance.paid || childAttendance.unpaid}
-                            >
-                              Paid
-                            </Button>
-                            <Button
-                              size="sm"
-                              className={childAttendance.unpaid ? "bg-destructive hover:bg-destructive/90 text-destructive-foreground" : ""}
-                              variant={childAttendance.unpaid ? "default" : "outline"}
-                              onClick={() => handlePayment(child.id, child.name, "unpaid")}
-                              disabled={!childAttendance.present || childAttendance.paid || childAttendance.unpaid}
-                            >
-                              Unpaid
-                            </Button>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          {childAttendance.present && (
-                            <span className={childAttendance.paid ? "text-success font-semibold" : "text-destructive font-semibold"}>
-                              {childAttendance.paid ? "" : "-"}Ksh 150.00
-                            </span>
-                          )}
-                          {childAttendance.absent && <span className="text-muted-foreground">Ksh 0.00</span>}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex justify-end gap-2">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleEdit(child)}
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => {
-                                setChildToDelete(child.id);
-                                setDeleteDialogOpen(true);
-                              }}
-                            >
-                              <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+        <div className="relative flex-1 max-w-md">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search by name or guardian..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+        <div className="flex gap-2">
+          <Button
+            variant={filterStatus === "all" ? "default" : "outline"}
+            onClick={() => setFilterStatus("all")}
+            size="sm"
+          >
+            All
+          </Button>
+          <Button
+            variant={filterStatus === "paid" ? "default" : "outline"}
+            onClick={() => setFilterStatus("paid")}
+            size="sm"
+          >
+            Paid
+          </Button>
+          <Button
+            variant={filterStatus === "unpaid" ? "default" : "outline"}
+            onClick={() => setFilterStatus("unpaid")}
+            size="sm"
+          >
+            Unpaid
+          </Button>
+        </div>
+      </div>
+
+      {loading ? (
+        <div className="text-center py-12">Loading...</div>
+      ) : filteredChildren.length === 0 ? (
+        <div className="text-center py-12 text-muted-foreground">
+          No children found
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {filteredChildren.map((child) => {
+            const childAttendance = attendance[child.id] || { present: false, absent: false, paid: false, unpaid: false };
+            
+            return (
+              <Card 
+                key={child.id} 
+                className="bg-card hover:shadow-lg transition-all duration-300 cursor-pointer"
+                onClick={() => navigate(`/child/${child.id}`)}
+              >
+                <CardContent className="p-6">
+                  <div className="flex items-start justify-between mb-4">
+                    <h3 className="text-2xl font-bold">{child.name}</h3>
+                    <Badge 
+                      variant={childAttendance.paid ? "default" : "secondary"}
+                      className={childAttendance.paid ? "bg-primary" : "bg-muted"}
+                    >
+                      {childAttendance.paid ? "Paid" : "Unpaid"}
+                    </Badge>
+                  </div>
+
+                  <div className="mb-6">
+                    <p className="text-sm text-muted-foreground mb-1">Payment Amount</p>
+                    <p className="text-xl font-semibold">
+                      {childAttendance.present ? (
+                        <span className={childAttendance.paid ? "text-primary" : "text-destructive"}>
+                          Ksh 150.00
+                        </span>
+                      ) : (
+                        <span className="text-muted-foreground">Ksh 0.00</span>
+                      )}
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3" onClick={(e) => e.stopPropagation()}>
+                    <Button
+                      size="sm"
+                      variant={childAttendance.present ? "default" : "outline"}
+                      className={childAttendance.present ? "bg-green-600 hover:bg-green-700" : ""}
+                      onClick={() => handleAttendance(child.id, child.name, "present")}
+                      disabled={childAttendance.present || childAttendance.absent}
+                    >
+                      🟢 Present
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant={childAttendance.absent ? "default" : "outline"}
+                      className={childAttendance.absent ? "bg-red-600 hover:bg-red-700" : ""}
+                      onClick={() => handleAttendance(child.id, child.name, "absent")}
+                      disabled={childAttendance.present || childAttendance.absent}
+                    >
+                      🔴 Absent
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant={childAttendance.paid ? "default" : "outline"}
+                      className={childAttendance.paid ? "bg-blue-600 hover:bg-blue-700" : ""}
+                      onClick={() => handlePayment(child.id, child.name, "paid")}
+                      disabled={!childAttendance.present || childAttendance.paid || childAttendance.unpaid}
+                    >
+                      💰 Paid
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant={childAttendance.unpaid ? "default" : "outline"}
+                      className={childAttendance.unpaid ? "bg-gray-600 hover:bg-gray-700" : ""}
+                      onClick={() => handlePayment(child.id, child.name, "unpaid")}
+                      disabled={!childAttendance.present || childAttendance.paid || childAttendance.unpaid}
+                    >
+                      ⚪ Unpaid
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
 
       <ChildDialog
         open={dialogOpen}
