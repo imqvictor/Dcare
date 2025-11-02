@@ -97,6 +97,44 @@ const ChildProfile = () => {
 
   const totalDebt = payments.reduce((sum, p) => sum + Number(p.debt_amount), 0);
 
+  const handlePayDebt = async () => {
+    try {
+      // Get all payments with debt
+      const paymentsWithDebt = payments.filter(p => Number(p.debt_amount) > 0);
+      
+      if (paymentsWithDebt.length === 0) {
+        toast({
+          title: "No Debt",
+          description: "There is no outstanding debt to clear",
+        });
+        return;
+      }
+
+      // Update all payments to clear debt
+      const { error } = await supabase
+        .from("payments")
+        .update({ debt_amount: 0, status: "paid" })
+        .eq("child_id", childId)
+        .gt("debt_amount", 0);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: `Cleared debt of ${formatCurrency(totalDebt)}`,
+      });
+
+      // Refresh data
+      fetchChildData();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
   if (loading) {
     return <div className="text-center py-8">Loading...</div>;
   }
@@ -133,10 +171,6 @@ const ChildProfile = () => {
               <p className="font-semibold">{child.age} years</p>
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">Class</p>
-              <p className="font-semibold">{child.class || "N/A"}</p>
-            </div>
-            <div>
               <p className="text-sm text-muted-foreground">Guardian Name</p>
               <p className="font-semibold">{child.guardian_name}</p>
             </div>
@@ -152,7 +186,7 @@ const ChildProfile = () => {
             </div>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-4 mt-6 pt-6 border-t">
+          <div className="grid md:grid-cols-3 gap-4 mt-6 pt-6 border-t">
             <Card className="bg-success/10">
               <CardContent className="pt-6">
                 <p className="text-sm text-muted-foreground">Total Paid</p>
@@ -167,6 +201,18 @@ const ChildProfile = () => {
                 <p className="text-2xl font-bold text-destructive">
                   {formatCurrency(totalDebt)}
                 </p>
+              </CardContent>
+            </Card>
+            <Card className="bg-primary/10">
+              <CardContent className="pt-6 flex flex-col items-center justify-center gap-2">
+                <p className="text-sm text-muted-foreground">Clear Debt</p>
+                <Button 
+                  onClick={handlePayDebt}
+                  disabled={totalDebt === 0}
+                  className="w-full"
+                >
+                  Pay Debt
+                </Button>
               </CardContent>
             </Card>
           </div>
