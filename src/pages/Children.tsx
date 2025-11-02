@@ -55,6 +55,7 @@ const Children = () => {
 
   useEffect(() => {
     fetchChildren();
+    fetchTodaysAttendance();
   }, []);
 
   const fetchChildren = async () => {
@@ -74,6 +75,33 @@ const Children = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchTodaysAttendance = async () => {
+    const today = new Date().toISOString().split("T")[0];
+    
+    try {
+      const { data, error } = await supabase
+        .from("payments")
+        .select("*")
+        .eq("payment_date", today);
+
+      if (error) throw error;
+
+      const attendanceMap: TodayAttendance = {};
+      data?.forEach((payment) => {
+        attendanceMap[payment.child_id] = {
+          present: payment.attendance_status === "present",
+          absent: payment.attendance_status === "absent",
+          paid: payment.status === "paid",
+          unpaid: payment.status === "unpaid",
+        };
+      });
+
+      setAttendance(attendanceMap);
+    } catch (error: any) {
+      console.error("Error fetching today's attendance:", error);
     }
   };
 
@@ -115,6 +143,23 @@ const Children = () => {
     const time = new Date().toLocaleTimeString();
     
     try {
+      // Check if a record already exists for today
+      const { data: existingRecord } = await supabase
+        .from("payments")
+        .select("*")
+        .eq("child_id", childId)
+        .eq("payment_date", today)
+        .maybeSingle();
+
+      if (existingRecord) {
+        toast({
+          title: "Already Recorded",
+          description: `Attendance for ${childName} has already been recorded today`,
+          variant: "destructive",
+        });
+        return;
+      }
+
       const amount = status === "present" ? paymentAmount : 0;
       const note = status === "present" 
         ? `Child arrived at ${time}` 
