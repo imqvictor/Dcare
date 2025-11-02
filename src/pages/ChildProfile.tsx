@@ -24,6 +24,7 @@ interface Child {
   guardian_name: string;
   contact_number: string;
   admission_date: string;
+  payment_amount: number;
 }
 
 interface Payment {
@@ -182,6 +183,12 @@ const ChildProfile = () => {
               <p className="text-sm text-muted-foreground">Admission Date</p>
               <p className="font-semibold">
                 {new Date(child.admission_date).toLocaleDateString()}
+              </p>
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Daily Payment Amount</p>
+              <p className="font-semibold text-primary">
+                {formatCurrency(child.payment_amount)}
               </p>
             </div>
           </div>
