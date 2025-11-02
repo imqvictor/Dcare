@@ -10,6 +10,7 @@ import Children from "./pages/Children";
 import TodaysPayment from "./pages/TodaysPayment";
 import ChildProfile from "./pages/ChildProfile";
 import Reports from "./pages/Reports";
+import Dashboard from "./pages/Dashboard";
 import Layout from "./components/Layout";
 import NotFound from "./pages/NotFound";
 import { ThemeProvider } from "./contexts/ThemeContext";
@@ -57,6 +58,7 @@ const App = () => (
             <Route path="/children" element={<ProtectedRoute><Children /></ProtectedRoute>} />
             <Route path="/today" element={<ProtectedRoute><TodaysPayment /></ProtectedRoute>} />
             <Route path="/child/:childId" element={<ProtectedRoute><ChildProfile /></ProtectedRoute>} />
+            <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>

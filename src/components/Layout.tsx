@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Baby, Users, DollarSign, LogOut, FileText, Moon, Sun } from "lucide-react";
+import { Baby, Users, DollarSign, LogOut, BarChart3, Moon, Sun } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -35,7 +35,7 @@ const Layout = ({ children }: LayoutProps) => {
   const navItems = [
     { path: "/children", label: "Children", icon: Users },
     { path: "/today", label: "Today's Payment", icon: DollarSign },
-    { path: "/reports", label: "Reports", icon: FileText },
+    { path: "/dashboard", label: "Dashboard", icon: BarChart3 },
   ];
 
   return (
