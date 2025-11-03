@@ -151,42 +151,49 @@ const Children = () => {
         .eq("payment_date", today)
         .maybeSingle();
 
-      if (existingRecord) {
-        toast({
-          title: "Already Recorded",
-          description: `Attendance for ${childName} has already been recorded today`,
-          variant: "destructive",
-        });
-        return;
-      }
-
       const amount = status === "present" ? paymentAmount : 0;
       const note = status === "present" 
         ? `Child arrived at ${time}` 
         : "Child did not report";
 
-      const { error } = await supabase
-        .from("payments")
-        .insert({
-          child_id: childId,
-          amount: Math.abs(amount),
-          payment_date: today,
-          status: "unpaid",
-          note,
-          attendance_status: status,
-          arrival_time: status === "present" ? new Date().toISOString() : null,
-          debt_amount: Math.abs(amount),
-        });
+      if (existingRecord) {
+        // Update existing record
+        const { error } = await supabase
+          .from("payments")
+          .update({
+            attendance_status: status,
+            arrival_time: status === "present" ? new Date().toISOString() : null,
+            note,
+          })
+          .eq("id", existingRecord.id);
 
-      if (error) throw error;
+        if (error) throw error;
+      } else {
+        // Create new record
+        const { error } = await supabase
+          .from("payments")
+          .insert({
+            child_id: childId,
+            amount: Math.abs(amount),
+            payment_date: today,
+            status: "unpaid",
+            note,
+            attendance_status: status,
+            arrival_time: status === "present" ? new Date().toISOString() : null,
+            debt_amount: Math.abs(amount),
+          });
+
+        if (error) throw error;
+      }
 
       setAttendance(prev => ({
         ...prev,
         [childId]: {
           ...prev[childId],
-          [status]: true,
           present: status === "present",
           absent: status === "absent",
+          paid: existingRecord?.status === "paid" || false,
+          unpaid: existingRecord?.status === "unpaid" || false,
         }
       }));
 
@@ -362,36 +369,36 @@ const Children = () => {
                     <Button
                       size="sm"
                       variant={childAttendance.present ? "default" : "outline"}
-                      className={childAttendance.present ? "bg-green-600 hover:bg-green-700" : ""}
+                      className={`transition-all duration-300 ${childAttendance.present ? "bg-green-600 hover:bg-green-700 scale-105" : "hover:scale-105"}`}
                       onClick={() => handleAttendance(child.id, child.name, "present", child.payment_amount)}
-                      disabled={childAttendance.present || childAttendance.absent}
+                      disabled={childAttendance.present}
                     >
                       🟢 Present
                     </Button>
                     <Button
                       size="sm"
                       variant={childAttendance.absent ? "default" : "outline"}
-                      className={childAttendance.absent ? "bg-red-600 hover:bg-red-700" : ""}
+                      className={`transition-all duration-300 ${childAttendance.absent ? "bg-red-600 hover:bg-red-700 scale-105" : "hover:scale-105"}`}
                       onClick={() => handleAttendance(child.id, child.name, "absent", child.payment_amount)}
-                      disabled={childAttendance.present || childAttendance.absent}
+                      disabled={childAttendance.absent}
                     >
                       🔴 Absent
                     </Button>
                     <Button
                       size="sm"
                       variant={childAttendance.paid ? "default" : "outline"}
-                      className={childAttendance.paid ? "bg-blue-600 hover:bg-blue-700" : ""}
+                      className={`transition-all duration-300 ${childAttendance.paid ? "bg-blue-600 hover:bg-blue-700 scale-105" : "hover:scale-105"}`}
                       onClick={() => handlePayment(child.id, child.name, "paid", child.payment_amount)}
-                      disabled={!childAttendance.present || childAttendance.paid || childAttendance.unpaid}
+                      disabled={!childAttendance.present || childAttendance.paid}
                     >
                       💰 Paid
                     </Button>
                     <Button
                       size="sm"
                       variant={childAttendance.unpaid ? "default" : "outline"}
-                      className={childAttendance.unpaid ? "bg-gray-600 hover:bg-gray-700" : ""}
+                      className={`transition-all duration-300 ${childAttendance.unpaid ? "bg-gray-600 hover:bg-gray-700 scale-105" : "hover:scale-105"}`}
                       onClick={() => handlePayment(child.id, child.name, "unpaid", child.payment_amount)}
-                      disabled={!childAttendance.present || childAttendance.paid || childAttendance.unpaid}
+                      disabled={!childAttendance.present || childAttendance.unpaid}
                     >
                       ⚪ Unpaid
                     </Button>
