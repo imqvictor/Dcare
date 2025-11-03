@@ -15,9 +15,8 @@ import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
 
 const childSchema = z.object({
-  first_name: z.string().trim().min(1, { message: "First name is required" }).max(50),
-  last_name: z.string().trim().min(1, { message: "Last name is required" }).max(50),
-  age: z.number().min(0, { message: "Age must be 0 or greater" }).max(18, { message: "Age must be 18 or less" }),
+  name: z.string().trim().min(1, { message: "Name is required" }).max(100),
+  age: z.string().trim().min(1, { message: "Age is required" }).max(20),
   admission_number: z.string().trim().min(1, { message: "Admission number is required" }).max(20),
   guardian_name: z.string().trim().min(1, { message: "Guardian name is required" }).max(100),
   contact_number: z.string().trim().min(1, { message: "Guardian phone is required" }).max(20),
@@ -34,8 +33,7 @@ interface ChildDialogProps {
 
 const ChildDialog = ({ open, onOpenChange, child, onSuccess }: ChildDialogProps) => {
   const [formData, setFormData] = useState({
-    first_name: "",
-    last_name: "",
+    name: "",
     age: "",
     admission_number: "",
     guardian_name: "",
@@ -48,10 +46,8 @@ const ChildDialog = ({ open, onOpenChange, child, onSuccess }: ChildDialogProps)
 
   useEffect(() => {
     if (child) {
-      const nameParts = child.name.split(" ");
       setFormData({
-        first_name: nameParts[0] || "",
-        last_name: nameParts.slice(1).join(" ") || "",
+        name: child.name || "",
         age: child.age?.toString() || "",
         admission_number: child.admission_number || "",
         guardian_name: child.guardian_name,
@@ -61,8 +57,7 @@ const ChildDialog = ({ open, onOpenChange, child, onSuccess }: ChildDialogProps)
       });
     } else {
       setFormData({
-        first_name: "",
-        last_name: "",
+        name: "",
         age: "",
         admission_number: "",
         guardian_name: "",
@@ -77,20 +72,17 @@ const ChildDialog = ({ open, onOpenChange, child, onSuccess }: ChildDialogProps)
     try {
       const validated = childSchema.parse({
         ...formData,
-        age: parseInt(formData.age),
         payment_amount: parseFloat(formData.payment_amount),
       });
 
       setLoading(true);
 
-      const fullName = `${validated.first_name} ${validated.last_name}`.trim();
-
       if (child) {
         const { error } = await supabase
           .from("children")
           .update({
-            name: fullName,
-            age: validated.age,
+            name: validated.name,
+            age: parseInt(validated.age),
             guardian_name: validated.guardian_name,
             contact_number: validated.contact_number,
             admission_date: validated.admission_date,
@@ -107,8 +99,8 @@ const ChildDialog = ({ open, onOpenChange, child, onSuccess }: ChildDialogProps)
         });
       } else {
         const { error } = await supabase.from("children").insert([{
-          name: fullName,
-          age: validated.age,
+          name: validated.name,
+          age: parseInt(validated.age),
           guardian_name: validated.guardian_name,
           contact_number: validated.contact_number,
           admission_date: validated.admission_date,
@@ -155,27 +147,15 @@ const ChildDialog = ({ open, onOpenChange, child, onSuccess }: ChildDialogProps)
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 mt-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="first_name" className="text-gray-200">First Name*</Label>
-              <Input
-                id="first_name"
-                value={formData.first_name}
-                onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
-                placeholder="John"
-                className="bg-[#1a2438] border-[#2d3b56] text-white placeholder:text-gray-500 focus:border-primary focus:ring-primary"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="last_name" className="text-gray-200">Last Name*</Label>
-              <Input
-                id="last_name"
-                value={formData.last_name}
-                onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
-                placeholder="Doe"
-                className="bg-[#1a2438] border-[#2d3b56] text-white placeholder:text-gray-500 focus:border-primary focus:ring-primary"
-              />
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="name" className="text-gray-200">Name*</Label>
+            <Input
+              id="name"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              placeholder="John Doe"
+              className="bg-[#1a2438] border-[#2d3b56] text-white placeholder:text-gray-500 focus:border-primary focus:ring-primary"
+            />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -183,9 +163,7 @@ const ChildDialog = ({ open, onOpenChange, child, onSuccess }: ChildDialogProps)
               <Label htmlFor="age" className="text-gray-200">Age*</Label>
               <Input
                 id="age"
-                type="number"
-                min="0"
-                max="18"
+                type="text"
                 value={formData.age}
                 onChange={(e) => setFormData({ ...formData, age: e.target.value })}
                 placeholder="5"
