@@ -56,6 +56,33 @@ const Children = () => {
   useEffect(() => {
     fetchChildren();
     fetchTodaysAttendance();
+
+    // Check for date change every minute
+    const dateCheckInterval = setInterval(() => {
+      const currentDate = new Date().toISOString().split("T")[0];
+      const lastFetchDate = localStorage.getItem("lastFetchDate");
+      
+      if (lastFetchDate !== currentDate) {
+        localStorage.setItem("lastFetchDate", currentDate);
+        fetchTodaysAttendance();
+      }
+    }, 60000); // Check every minute
+
+    // Refetch when page becomes visible
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        fetchTodaysAttendance();
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    // Set initial date
+    localStorage.setItem("lastFetchDate", new Date().toISOString().split("T")[0]);
+
+    return () => {
+      clearInterval(dateCheckInterval);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
   }, []);
 
   const fetchChildren = async () => {
