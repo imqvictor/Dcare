@@ -273,6 +273,12 @@ const Children = () => {
     return childAttendance.absent || (childAttendance.present && (childAttendance.paid || childAttendance.unpaid));
   };
 
+  const isAbsentButtonDisabled = (childId: string) => {
+    const childAttendance = attendance[childId] || { present: false, absent: false, paid: false, unpaid: false };
+    // Disable Absent if Present is already marked or day is complete
+    return childAttendance.present || isChildDayComplete(childId);
+  };
+
   const filteredChildren = children.filter((child) => {
     const childAttendance = attendance[child.id] || { present: false, absent: false, paid: false, unpaid: false };
     const matchesSearch = child.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -376,8 +382,8 @@ const Children = () => {
                       size="sm"
                       variant={childAttendance.present ? "default" : "outline"}
                       className={`transition-all duration-300 ${
-                        childAttendance.present ? "bg-green-600 hover:bg-green-700 scale-105" : "hover:scale-105"
-                      } ${isChildDayComplete(child.id) ? "opacity-50" : ""}`}
+                        childAttendance.present ? "bg-green-600 hover:bg-green-700 text-white scale-105" : "hover:scale-105"
+                      } ${isChildDayComplete(child.id) ? "opacity-50 cursor-not-allowed" : ""}`}
                       onClick={() => handleAttendance(child.id, child.name, "present", child.payment_amount)}
                       disabled={isChildDayComplete(child.id)}
                     >
@@ -387,10 +393,10 @@ const Children = () => {
                       size="sm"
                       variant={childAttendance.absent ? "default" : "outline"}
                       className={`transition-all duration-300 ${
-                        childAttendance.absent ? "bg-red-600 hover:bg-red-700 scale-105" : "hover:scale-105"
-                      } ${isChildDayComplete(child.id) ? "opacity-50" : ""}`}
+                        childAttendance.absent ? "bg-red-600 hover:bg-red-700 text-white scale-105" : "hover:scale-105"
+                      } ${isAbsentButtonDisabled(child.id) ? "opacity-50 cursor-not-allowed" : ""}`}
                       onClick={() => handleAttendance(child.id, child.name, "absent", child.payment_amount)}
-                      disabled={isChildDayComplete(child.id)}
+                      disabled={isAbsentButtonDisabled(child.id)}
                     >
                       🔴 Absent
                     </Button>
@@ -398,8 +404,8 @@ const Children = () => {
                       size="sm"
                       variant={childAttendance.paid ? "default" : "outline"}
                       className={`transition-all duration-300 ${
-                        childAttendance.paid ? "bg-blue-600 hover:bg-blue-700 scale-105" : "hover:scale-105"
-                      } ${isChildDayComplete(child.id) ? "opacity-50" : ""}`}
+                        childAttendance.paid ? "bg-blue-600 hover:bg-blue-700 text-white scale-105" : "hover:scale-105"
+                      } ${!childAttendance.present || isChildDayComplete(child.id) ? "opacity-50 cursor-not-allowed" : ""}`}
                       onClick={() => handlePayment(child.id, child.name, "paid", child.payment_amount)}
                       disabled={!childAttendance.present || isChildDayComplete(child.id)}
                     >
@@ -409,8 +415,8 @@ const Children = () => {
                       size="sm"
                       variant={childAttendance.unpaid ? "default" : "outline"}
                       className={`transition-all duration-300 ${
-                        childAttendance.unpaid ? "bg-gray-600 hover:bg-gray-700 scale-105" : "hover:scale-105"
-                      } ${isChildDayComplete(child.id) ? "opacity-50" : ""}`}
+                        childAttendance.unpaid ? "bg-yellow-600 hover:bg-yellow-700 text-white scale-105" : "hover:scale-105"
+                      } ${!childAttendance.present || isChildDayComplete(child.id) ? "opacity-50 cursor-not-allowed" : ""}`}
                       onClick={() => handlePayment(child.id, child.name, "unpaid", child.payment_amount)}
                       disabled={!childAttendance.present || isChildDayComplete(child.id)}
                     >
