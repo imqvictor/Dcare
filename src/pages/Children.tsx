@@ -122,7 +122,7 @@ const Children = () => {
           present: payment.attendance_status === "present",
           absent: payment.attendance_status === "absent",
           paid: payment.status === "paid",
-          unpaid: payment.status === "unpaid",
+          unpaid: payment.status === "unpaid", // Only true when explicitly set to unpaid
         };
       });
 
@@ -196,14 +196,14 @@ const Children = () => {
 
         if (error) throw error;
       } else {
-        // Create new record
+        // Create new record with pending status
         const { error } = await supabase
           .from("payments")
           .insert({
             child_id: childId,
             amount: Math.abs(amount),
             payment_date: today,
-            status: "unpaid",
+            status: "pending",
             note,
             attendance_status: status,
             arrival_time: status === "present" ? new Date().toISOString() : null,
@@ -216,7 +216,6 @@ const Children = () => {
       setAttendance(prev => ({
         ...prev,
         [childId]: {
-          ...prev[childId],
           present: status === "present",
           absent: status === "absent",
           paid: existingRecord?.status === "paid" || false,
