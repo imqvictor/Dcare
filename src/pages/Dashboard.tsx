@@ -1,10 +1,31 @@
-import { useState } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BarChart3, FileText } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { BarChart3, Users, FileText } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import Reports from "./Reports";
 
 const Dashboard = () => {
-  const [activeTab, setActiveTab] = useState("reports");
+  const [totalChildren, setTotalChildren] = useState(0);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
+
+  const fetchDashboardData = async () => {
+    try {
+      const { count, error } = await supabase
+        .from("children")
+        .select("*", { count: "exact", head: true });
+
+      if (error) throw error;
+      setTotalChildren(count || 0);
+    } catch (error) {
+      console.error("Error fetching dashboard data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -16,18 +37,38 @@ const Dashboard = () => {
         <p className="text-muted-foreground mt-1">View analytics and reports</p>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="bg-card border">
-          <TabsTrigger value="reports" className="flex items-center gap-2">
-            <FileText className="h-4 w-4" />
-            Reports
-          </TabsTrigger>
-        </TabsList>
+      {/* Key Metrics */}
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Children</CardTitle>
+            <Users className="h-4 w-4 text-primary" />
+          </CardHeader>
+          <CardContent>
+            {loading ? (
+              <div className="text-2xl font-bold">Loading...</div>
+            ) : (
+              <div className="text-3xl font-bold text-primary">{totalChildren}</div>
+            )}
+            <p className="text-xs text-muted-foreground mt-1">
+              Registered children
+            </p>
+          </CardContent>
+        </Card>
+      </div>
 
-        <TabsContent value="reports" className="space-y-6">
+      {/* Reports Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <FileText className="h-5 w-5" />
+            Reports & Analytics
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
           <Reports />
-        </TabsContent>
-      </Tabs>
+        </CardContent>
+      </Card>
     </div>
   );
 };
