@@ -84,6 +84,7 @@ const TodaysPayment = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead className="w-12">#</TableHead>
                     <TableHead>Child Name</TableHead>
                     <TableHead>Amount</TableHead>
                     <TableHead>Date</TableHead>
@@ -92,8 +93,11 @@ const TodaysPayment = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {payments.map((payment) => (
+                  {payments.map((payment, index) => (
                     <TableRow key={payment.id}>
+                      <TableCell className="font-medium text-muted-foreground">
+                        {index + 1}
+                      </TableCell>
                       <TableCell 
                         className="font-medium cursor-pointer hover:text-primary underline"
                         onClick={() => navigate(`/child/${payment.child_id}`)}
