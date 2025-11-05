@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BarChart3, Users, FileText } from "lucide-react";
+import { BarChart3, Users, FileText, ChevronRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import Reports from "./Reports";
+import { useNavigate } from "react-router-dom";
 
 const Dashboard = () => {
+  const navigate = useNavigate();
   const [totalChildren, setTotalChildren] = useState(0);
   const [loading, setLoading] = useState(true);
 
@@ -38,7 +39,7 @@ const Dashboard = () => {
       </div>
 
       {/* Key Metrics */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-6 md:grid-cols-2">
         <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Children</CardTitle>
@@ -55,20 +56,28 @@ const Dashboard = () => {
             </p>
           </CardContent>
         </Card>
-      </div>
 
-      {/* Reports Section */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <FileText className="h-5 w-5" />
-            Reports & Analytics
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Reports />
-        </CardContent>
-      </Card>
+        <Card 
+          className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20 cursor-pointer hover:border-primary/40 transition-all hover:shadow-md"
+          onClick={() => navigate("/reports")}
+        >
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Reports</CardTitle>
+            <FileText className="h-4 w-4 text-primary" />
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-lg font-semibold text-foreground">View Analytics</div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Payment summary, attendance & debt overview
+                </p>
+              </div>
+              <ChevronRight className="h-5 w-5 text-primary" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };

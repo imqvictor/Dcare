@@ -12,6 +12,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useNavigate } from "react-router-dom";
+import { FileText } from "lucide-react";
 
 interface PaymentSummary {
   date: string;
@@ -150,6 +151,14 @@ const Reports = () => {
 
   return (
     <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold text-foreground flex items-center gap-2">
+          <FileText className="h-8 w-8 text-primary" />
+          Reports & Analytics
+        </h1>
+        <p className="text-muted-foreground mt-1">View payment summaries, attendance, and debt overview</p>
+      </div>
+
       <div className="grid md:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
