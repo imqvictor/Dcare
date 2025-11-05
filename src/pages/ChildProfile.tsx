@@ -323,7 +323,7 @@ const ChildProfile = () => {
             </div>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-4 mt-6 pt-6 border-t">
+          <div className="grid md:grid-cols-3 gap-4 mt-6 pt-6 border-t">
             <Card className="bg-success/10">
               <CardContent className="pt-6">
                 <p className="text-sm text-muted-foreground">Total Paid</p>
@@ -340,49 +340,43 @@ const ChildProfile = () => {
                 </p>
               </CardContent>
             </Card>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card className="bg-muted/30">
-        <CardHeader>
-          <CardTitle className="text-lg">Debt Adjustment</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex gap-3 items-center">
-            <Button 
-              onClick={handlePartialPayment}
-              disabled={totalDebt === 0 || !partialPaymentAmount}
-              className="shrink-0"
-            >
-              Pay
-            </Button>
-            <Input
-              type="number"
-              placeholder="Amount Paid"
-              value={partialPaymentAmount}
-              onChange={(e) => setPartialPaymentAmount(e.target.value)}
-              disabled={totalDebt === 0}
-              className="bg-background"
-              min="0"
-              step="0.01"
-            />
-          </div>
-          
-          <Button 
-            onClick={handleClearFullBalance}
-            disabled={totalDebt === 0}
-            variant="outline"
-            className="w-full"
-          >
-            Clear Full Balance
-          </Button>
-
-          <div className="pt-2 border-t">
-            <p className="text-sm text-muted-foreground">Current Balance</p>
-            <p className="text-xl font-semibold text-destructive">
-              {formatCurrency(totalDebt)}
-            </p>
+            <Card className="bg-muted/30">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base">Pay Debt</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex gap-2 items-center">
+                  <Button 
+                    onClick={handlePartialPayment}
+                    disabled={totalDebt === 0 || !partialPaymentAmount}
+                    className="shrink-0"
+                    size="sm"
+                  >
+                    Pay
+                  </Button>
+                  <Input
+                    type="number"
+                    placeholder="Amount Paid"
+                    value={partialPaymentAmount}
+                    onChange={(e) => setPartialPaymentAmount(e.target.value)}
+                    disabled={totalDebt === 0}
+                    className="bg-background"
+                    min="0"
+                    step="0.01"
+                  />
+                </div>
+                
+                <Button 
+                  onClick={handleClearFullBalance}
+                  disabled={totalDebt === 0}
+                  variant="outline"
+                  className="w-full"
+                  size="sm"
+                >
+                  Clear Full Balance
+                </Button>
+              </CardContent>
+            </Card>
           </div>
         </CardContent>
       </Card>
