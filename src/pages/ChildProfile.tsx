@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Pencil, Trash2 } from "lucide-react";
 import ChildDialog from "@/components/ChildDialog";
@@ -56,6 +57,7 @@ const ChildProfile = () => {
   const [loading, setLoading] = useState(true);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [partialPaymentAmount, setPartialPaymentAmount] = useState("");
   const { toast } = useToast();
 
   useEffect(() => {
@@ -111,9 +113,74 @@ const ChildProfile = () => {
 
   const totalDebt = payments.reduce((sum, p) => sum + Number(p.debt_amount), 0);
 
-  const handlePayDebt = async () => {
+  const handlePartialPayment = async () => {
+    const amount = parseFloat(partialPaymentAmount);
+    
+    if (!amount || amount <= 0) {
+      toast({
+        title: "Invalid Amount",
+        description: "Please enter a valid payment amount",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (amount > totalDebt) {
+      toast({
+        title: "Amount Too Large",
+        description: "Payment amount cannot exceed total debt",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
-      // Get all payments with debt
+      // Get payments with debt, sorted by date (oldest first)
+      const paymentsWithDebt = payments
+        .filter(p => Number(p.debt_amount) > 0)
+        .sort((a, b) => new Date(a.payment_date).getTime() - new Date(b.payment_date).getTime());
+
+      let remainingAmount = amount;
+
+      // Pay off debts starting from oldest
+      for (const payment of paymentsWithDebt) {
+        if (remainingAmount <= 0) break;
+
+        const currentDebt = Number(payment.debt_amount);
+        const paymentAmount = Math.min(remainingAmount, currentDebt);
+        const newDebt = currentDebt - paymentAmount;
+
+        const { error } = await supabase
+          .from("payments")
+          .update({ 
+            debt_amount: newDebt,
+            status: newDebt === 0 ? "paid" : payment.status
+          })
+          .eq("id", payment.id);
+
+        if (error) throw error;
+
+        remainingAmount -= paymentAmount;
+      }
+
+      toast({
+        title: "Success",
+        description: "Partial payment recorded successfully.",
+      });
+
+      setPartialPaymentAmount("");
+      fetchChildData();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleClearFullBalance = async () => {
+    try {
       const paymentsWithDebt = payments.filter(p => Number(p.debt_amount) > 0);
       
       if (paymentsWithDebt.length === 0) {
@@ -124,7 +191,6 @@ const ChildProfile = () => {
         return;
       }
 
-      // Update all payments to clear debt
       const { error } = await supabase
         .from("payments")
         .update({ debt_amount: 0, status: "paid" })
@@ -135,10 +201,9 @@ const ChildProfile = () => {
 
       toast({
         title: "Success",
-        description: `Cleared debt of ${formatCurrency(totalDebt)}`,
+        description: "Outstanding balance cleared.",
       });
 
-      // Refresh data
       fetchChildData();
     } catch (error: any) {
       toast({
@@ -258,7 +323,7 @@ const ChildProfile = () => {
             </div>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-4 mt-6 pt-6 border-t">
+          <div className="grid md:grid-cols-2 gap-4 mt-6 pt-6 border-t">
             <Card className="bg-success/10">
               <CardContent className="pt-6">
                 <p className="text-sm text-muted-foreground">Total Paid</p>
@@ -275,18 +340,49 @@ const ChildProfile = () => {
                 </p>
               </CardContent>
             </Card>
-            <Card className="bg-primary/10">
-              <CardContent className="pt-6 flex flex-col items-center justify-center gap-2">
-                <p className="text-sm text-muted-foreground">Clear Debt</p>
-                <Button 
-                  onClick={handlePayDebt}
-                  disabled={totalDebt === 0}
-                  className="w-full"
-                >
-                  Pay Debt
-                </Button>
-              </CardContent>
-            </Card>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="bg-muted/30">
+        <CardHeader>
+          <CardTitle className="text-lg">Debt Adjustment</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex gap-3 items-center">
+            <Button 
+              onClick={handlePartialPayment}
+              disabled={totalDebt === 0 || !partialPaymentAmount}
+              className="shrink-0"
+            >
+              Pay
+            </Button>
+            <Input
+              type="number"
+              placeholder="Amount Paid"
+              value={partialPaymentAmount}
+              onChange={(e) => setPartialPaymentAmount(e.target.value)}
+              disabled={totalDebt === 0}
+              className="bg-background"
+              min="0"
+              step="0.01"
+            />
+          </div>
+          
+          <Button 
+            onClick={handleClearFullBalance}
+            disabled={totalDebt === 0}
+            variant="outline"
+            className="w-full"
+          >
+            Clear Full Balance
+          </Button>
+
+          <div className="pt-2 border-t">
+            <p className="text-sm text-muted-foreground">Current Balance</p>
+            <p className="text-xl font-semibold text-destructive">
+              {formatCurrency(totalDebt)}
+            </p>
           </div>
         </CardContent>
       </Card>
