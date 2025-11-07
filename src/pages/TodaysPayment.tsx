@@ -33,6 +33,33 @@ const TodaysPayment = () => {
 
   useEffect(() => {
     fetchTodaysPayments();
+
+    // Check for date change every minute
+    const dateCheckInterval = setInterval(() => {
+      const currentDate = new Date().toISOString().split("T")[0];
+      const lastFetchDate = localStorage.getItem("lastPaymentFetchDate");
+      
+      if (lastFetchDate !== currentDate) {
+        localStorage.setItem("lastPaymentFetchDate", currentDate);
+        fetchTodaysPayments();
+      }
+    }, 60000); // Check every minute
+
+    // Refetch when page becomes visible
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        fetchTodaysPayments();
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    // Set initial date
+    localStorage.setItem("lastPaymentFetchDate", new Date().toISOString().split("T")[0]);
+
+    return () => {
+      clearInterval(dateCheckInterval);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
   }, []);
 
   const fetchTodaysPayments = async () => {
