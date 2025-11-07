@@ -1,31 +1,121 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BarChart3, Users, FileText, ChevronRight } from "lucide-react";
+import { BarChart3, Users, FileText, ChevronRight, DollarSign, AlertCircle, TrendingUp, Calendar } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const [totalChildren, setTotalChildren] = useState(0);
+  const [todayCollection, setTodayCollection] = useState(0);
+  const [totalDebt, setTotalDebt] = useState(0);
+  const [totalPaidOverall, setTotalPaidOverall] = useState(0);
+  const [monthlyCollection, setMonthlyCollection] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchDashboardData();
+
+    // Check for date change every minute
+    const dateCheckInterval = setInterval(() => {
+      const currentDate = new Date().toISOString().split("T")[0];
+      const lastFetchDate = localStorage.getItem("lastDashboardFetchDate");
+      
+      if (lastFetchDate !== currentDate) {
+        localStorage.setItem("lastDashboardFetchDate", currentDate);
+        fetchDashboardData();
+      }
+    }, 60000); // Check every minute
+
+    // Refetch when page becomes visible
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        fetchDashboardData();
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    // Set initial date
+    localStorage.setItem("lastDashboardFetchDate", new Date().toISOString().split("T")[0]);
+
+    return () => {
+      clearInterval(dateCheckInterval);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
   }, []);
 
   const fetchDashboardData = async () => {
     try {
-      const { count, error } = await supabase
+      const today = new Date().toISOString().split("T")[0];
+      const firstDayOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split("T")[0];
+      const lastDayOfMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).toISOString().split("T")[0];
+
+      // Get total children count
+      const { count, error: countError } = await supabase
         .from("children")
         .select("*", { count: "exact", head: true });
 
-      if (error) throw error;
+      if (countError) throw countError;
       setTotalChildren(count || 0);
+
+      // Get today's amount to be collected (present children only)
+      const { data: todayPayments, error: todayError } = await supabase
+        .from("payments")
+        .select("amount, children(payment_amount)")
+        .eq("payment_date", today)
+        .eq("attendance_status", "present");
+
+      if (todayError) throw todayError;
+      
+      // Sum up the payment amounts for present children
+      const todayTotal = todayPayments?.reduce((sum, payment) => {
+        return sum + (payment.children as any)?.payment_amount || 0;
+      }, 0) || 0;
+      setTodayCollection(todayTotal);
+
+      // Get total outstanding debt
+      const { data: debtData, error: debtError } = await supabase
+        .from("payments")
+        .select("debt_amount");
+
+      if (debtError) throw debtError;
+      
+      const totalDebtAmount = debtData?.reduce((sum, payment) => sum + (payment.debt_amount || 0), 0) || 0;
+      setTotalDebt(totalDebtAmount);
+
+      // Get total paid overall
+      const { data: paidData, error: paidError } = await supabase
+        .from("payments")
+        .select("amount")
+        .eq("status", "paid");
+
+      if (paidError) throw paidError;
+      
+      const totalPaid = paidData?.reduce((sum, payment) => sum + payment.amount, 0) || 0;
+      setTotalPaidOverall(totalPaid);
+
+      // Get this month's collection
+      const { data: monthlyData, error: monthlyError } = await supabase
+        .from("payments")
+        .select("amount")
+        .eq("status", "paid")
+        .gte("payment_date", firstDayOfMonth)
+        .lte("payment_date", lastDayOfMonth);
+
+      if (monthlyError) throw monthlyError;
+      
+      const monthlyTotal = monthlyData?.reduce((sum, payment) => sum + payment.amount, 0) || 0;
+      setMonthlyCollection(monthlyTotal);
+
     } catch (error) {
       console.error("Error fetching dashboard data:", error);
     } finally {
       setLoading(false);
     }
+  };
+
+  const formatCurrency = (amount: number) => {
+    return `Ksh ${amount.toFixed(2)}`;
   };
 
   return (
@@ -39,7 +129,7 @@ const Dashboard = () => {
       </div>
 
       {/* Key Metrics */}
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Children</CardTitle>
@@ -53,6 +143,86 @@ const Dashboard = () => {
             )}
             <p className="text-xs text-muted-foreground mt-1">
               Registered children
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card 
+          className="bg-gradient-to-br from-success/10 to-success/5 border-success/20 cursor-pointer hover:border-success/40 transition-all hover:shadow-md"
+          onClick={() => navigate("/today")}
+        >
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Today's Collection Target</CardTitle>
+            <DollarSign className="h-4 w-4 text-success" />
+          </CardHeader>
+          <CardContent>
+            {loading ? (
+              <div className="text-2xl font-bold">Loading...</div>
+            ) : (
+              <div className="text-3xl font-bold text-success">{formatCurrency(todayCollection)}</div>
+            )}
+            <p className="text-xs text-muted-foreground mt-1">
+              From present children today
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card 
+          className="bg-gradient-to-br from-destructive/10 to-destructive/5 border-destructive/20 cursor-pointer hover:border-destructive/40 transition-all hover:shadow-md"
+          onClick={() => navigate("/reports")}
+        >
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Outstanding Debt</CardTitle>
+            <AlertCircle className="h-4 w-4 text-destructive" />
+          </CardHeader>
+          <CardContent>
+            {loading ? (
+              <div className="text-2xl font-bold">Loading...</div>
+            ) : (
+              <div className="text-3xl font-bold text-destructive">{formatCurrency(totalDebt)}</div>
+            )}
+            <p className="text-xs text-muted-foreground mt-1">
+              Accumulated debt
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card 
+          className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20 cursor-pointer hover:border-primary/40 transition-all hover:shadow-md"
+          onClick={() => navigate("/reports")}
+        >
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Amount Paid</CardTitle>
+            <TrendingUp className="h-4 w-4 text-primary" />
+          </CardHeader>
+          <CardContent>
+            {loading ? (
+              <div className="text-2xl font-bold">Loading...</div>
+            ) : (
+              <div className="text-3xl font-bold text-primary">{formatCurrency(totalPaidOverall)}</div>
+            )}
+            <p className="text-xs text-muted-foreground mt-1">
+              All-time collection
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card 
+          className="bg-gradient-to-br from-accent/10 to-accent/5 border-accent/20 cursor-pointer hover:border-accent/40 transition-all hover:shadow-md"
+          onClick={() => navigate("/reports")}
+        >
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">This Month's Collection</CardTitle>
+            <Calendar className="h-4 w-4 text-accent" />
+          </CardHeader>
+          <CardContent>
+            {loading ? (
+              <div className="text-2xl font-bold">Loading...</div>
+            ) : (
+              <div className="text-3xl font-bold text-accent">{formatCurrency(monthlyCollection)}</div>
+            )}
+            <p className="text-xs text-muted-foreground mt-1">
+              {new Date().toLocaleString('default', { month: 'long' })} total
             </p>
           </CardContent>
         </Card>
