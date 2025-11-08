@@ -408,45 +408,45 @@ const Children = () => {
                       size="sm"
                       variant={childAttendance.present ? "default" : "outline"}
                       className={`transition-all duration-300 ${
-                        childAttendance.present ? "bg-green-600 hover:bg-green-700 text-white scale-105" : "hover:scale-105"
+                        childAttendance.present ? "bg-btn-present hover:bg-btn-present/90 text-btn-present-foreground scale-105" : "hover:scale-105"
                       } ${isChildDayComplete(child.id) ? "opacity-50 cursor-not-allowed" : ""}`}
                       onClick={() => handleAttendance(child.id, child.name, "present", child.payment_amount)}
                       disabled={isChildDayComplete(child.id)}
                     >
-                      🟢 Present
+                      Present
                     </Button>
                     <Button
                       size="sm"
                       variant={childAttendance.absent ? "default" : "outline"}
                       className={`transition-all duration-300 ${
-                        childAttendance.absent ? "bg-red-600 hover:bg-red-700 text-white scale-105" : "hover:scale-105"
+                        childAttendance.absent ? "bg-btn-absent hover:bg-btn-absent/90 text-btn-absent-foreground scale-105" : "hover:scale-105"
                       } ${isAbsentButtonDisabled(child.id) ? "opacity-50 cursor-not-allowed" : ""}`}
                       onClick={() => handleAttendance(child.id, child.name, "absent", child.payment_amount)}
                       disabled={isAbsentButtonDisabled(child.id)}
                     >
-                      🔴 Absent
+                      Absent
                     </Button>
                     <Button
                       size="sm"
                       variant={childAttendance.paid ? "default" : "outline"}
                       className={`transition-all duration-300 ${
-                        childAttendance.paid ? "bg-blue-600 hover:bg-blue-700 text-white scale-105" : "hover:scale-105"
+                        childAttendance.paid ? "bg-btn-paid hover:bg-btn-paid/90 text-btn-paid-foreground scale-105" : "hover:scale-105"
                       } ${!childAttendance.present || isChildDayComplete(child.id) ? "opacity-50 cursor-not-allowed" : ""}`}
                       onClick={() => handlePayment(child.id, child.name, "paid", child.payment_amount)}
                       disabled={!childAttendance.present || isChildDayComplete(child.id)}
                     >
-                      💰 Paid
+                      Paid
                     </Button>
                     <Button
                       size="sm"
                       variant={childAttendance.unpaid ? "default" : "outline"}
                       className={`transition-all duration-300 ${
-                        childAttendance.unpaid ? "bg-yellow-600 hover:bg-yellow-700 text-white scale-105" : "hover:scale-105"
+                        childAttendance.unpaid ? "bg-btn-unpaid hover:bg-btn-unpaid/90 text-btn-unpaid-foreground scale-105" : "hover:scale-105"
                       } ${!childAttendance.present || isChildDayComplete(child.id) ? "opacity-50 cursor-not-allowed" : ""}`}
                       onClick={() => handlePayment(child.id, child.name, "unpaid", child.payment_amount)}
                       disabled={!childAttendance.present || isChildDayComplete(child.id)}
                     >
-                      ⚪ Unpaid
+                      Unpaid
                     </Button>
                   </div>
                 </CardContent>

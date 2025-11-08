@@ -58,6 +58,22 @@ export default {
           foreground: "hsl(var(--warning-foreground))",
           light: "hsl(var(--warning-light))",
         },
+        "btn-present": {
+          DEFAULT: "hsl(var(--btn-present))",
+          foreground: "hsl(var(--btn-present-foreground))",
+        },
+        "btn-absent": {
+          DEFAULT: "hsl(var(--btn-absent))",
+          foreground: "hsl(var(--btn-absent-foreground))",
+        },
+        "btn-paid": {
+          DEFAULT: "hsl(var(--btn-paid))",
+          foreground: "hsl(var(--btn-paid-foreground))",
+        },
+        "btn-unpaid": {
+          DEFAULT: "hsl(var(--btn-unpaid))",
+          foreground: "hsl(var(--btn-unpaid-foreground))",
+        },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",

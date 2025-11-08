@@ -83,31 +83,31 @@ const Reports = () => {
         { name: "Absent", value: absentCount },
       ]);
 
-      // Debt overview
+      // Debt overview - sum up all debt_amount per child
       const { data: debtData } = await supabase
         .from("payments")
         .select("child_id, debt_amount, payment_date, children(name)")
-        .gt("debt_amount", 0)
-        .order("debt_amount", { ascending: false });
+        .gt("debt_amount", 0);
 
       const debtMap = new Map<string, { name: string; debt: number; date: string }>();
       debtData?.forEach((d: any) => {
         const current = debtMap.get(d.child_id);
-        if (!current || new Date(d.payment_date) > new Date(current.date)) {
-          debtMap.set(d.child_id, {
-            name: d.children.name,
-            debt: (current?.debt || 0) + Number(d.debt_amount),
-            date: d.payment_date,
-          });
-        }
+        const currentDate = current?.date || d.payment_date;
+        debtMap.set(d.child_id, {
+          name: d.children.name,
+          debt: (current?.debt || 0) + Number(d.debt_amount),
+          date: new Date(d.payment_date) > new Date(currentDate) ? d.payment_date : currentDate,
+        });
       });
 
-      const debtList = Array.from(debtMap.entries()).map(([child_id, data]) => ({
-        child_id,
-        child_name: data.name,
-        total_debt: data.debt,
-        last_payment_date: data.date,
-      }));
+      const debtList = Array.from(debtMap.entries())
+        .map(([child_id, data]) => ({
+          child_id,
+          child_name: data.name,
+          total_debt: data.debt,
+          last_payment_date: data.date,
+        }))
+        .sort((a, b) => b.total_debt - a.total_debt);
       setDebtOverview(debtList);
 
       // Top performers
@@ -243,6 +243,14 @@ const Reports = () => {
       <Card>
         <CardHeader>
           <CardTitle>Debt Overview</CardTitle>
+          {debtOverview.length > 0 && (
+            <div className="mt-2 p-4 bg-destructive/10 rounded-lg">
+              <p className="text-sm text-muted-foreground">Overall Total Debt</p>
+              <p className="text-2xl font-bold text-destructive">
+                {formatCurrency(debtOverview.reduce((sum, debt) => sum + debt.total_debt, 0))}
+              </p>
+            </div>
+          )}
         </CardHeader>
         <CardContent>
           {debtOverview.length === 0 ? (

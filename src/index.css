@@ -33,6 +33,23 @@ All colors MUST be HSL.
     --accent: 45 100% 95%;
     --accent-foreground: 45 90% 35%;
 
+    /* Button state colors */
+    /* Present button - Blue */
+    --btn-present: 211 100% 50%;
+    --btn-present-foreground: 0 0% 100%;
+    
+    /* Absent button - Yellow */
+    --btn-absent: 45 100% 51%;
+    --btn-absent-foreground: 0 0% 0%;
+    
+    /* Paid button - Green */
+    --btn-paid: 134 61% 41%;
+    --btn-paid-foreground: 0 0% 100%;
+    
+    /* Unpaid button - Red */
+    --btn-unpaid: 354 70% 54%;
+    --btn-unpaid-foreground: 0 0% 100%;
+
     /* Success: Green for paid status */
     --success: 142 70% 45%;
     --success-foreground: 0 0% 100%;
@@ -95,6 +112,19 @@ All colors MUST be HSL.
 
     --accent: 45 80% 25%;
     --accent-foreground: 210 40% 98%;
+
+    /* Button state colors (dark mode) */
+    --btn-present: 211 100% 55%;
+    --btn-present-foreground: 0 0% 100%;
+    
+    --btn-absent: 45 100% 55%;
+    --btn-absent-foreground: 0 0% 0%;
+    
+    --btn-paid: 134 61% 45%;
+    --btn-paid-foreground: 0 0% 100%;
+    
+    --btn-unpaid: 354 70% 58%;
+    --btn-unpaid-foreground: 0 0% 100%;
 
     --success: 142 70% 45%;
     --success-foreground: 0 0% 100%;

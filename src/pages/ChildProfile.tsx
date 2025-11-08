@@ -127,8 +127,8 @@ const ChildProfile = () => {
 
     if (amount > totalDebt) {
       toast({
-        title: "Amount Too Large",
-        description: "Payment amount cannot exceed total debt",
+        title: "Amount exceeds remaining debt.",
+        description: `Maximum payable amount is ${formatCurrency(totalDebt)}`,
         variant: "destructive",
       });
       return;
@@ -165,7 +165,7 @@ const ChildProfile = () => {
 
       toast({
         title: "Success",
-        description: "Partial payment recorded successfully.",
+        description: `Payment of ${formatCurrency(amount)} recorded successfully.`,
       });
 
       setPartialPaymentAmount("");
