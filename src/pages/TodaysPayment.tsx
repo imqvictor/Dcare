@@ -114,7 +114,6 @@ const TodaysPayment = () => {
                     <TableHead className="w-12">#</TableHead>
                     <TableHead>Child Name</TableHead>
                     <TableHead>Amount</TableHead>
-                    <TableHead>Date</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Debt</TableHead>
                   </TableRow>
@@ -140,9 +139,6 @@ const TodaysPayment = () => {
                       >
                         {payment.status === "paid" ? "" : "-"}
                         {formatCurrency(payment.amount)}
-                      </TableCell>
-                      <TableCell>
-                        {new Date(payment.payment_date).toLocaleDateString()}
                       </TableCell>
                       <TableCell>
                         <Badge
