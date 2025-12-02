@@ -65,9 +65,9 @@ const Layout = ({ children }: LayoutProps) => {
       </header>
 
       {/* Navigation */}
-      <nav className="border-b bg-card">
-        <div className="container mx-auto px-4">
-          <div className="flex gap-1">
+      <nav className="border-b bg-card overflow-x-auto">
+        <div className="container mx-auto px-2 sm:px-4">
+          <div className="flex gap-1 min-w-max">
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = location.pathname === item.path;
@@ -75,11 +75,11 @@ const Layout = ({ children }: LayoutProps) => {
                 <Button
                   key={item.path}
                   variant={isActive ? "default" : "ghost"}
-                  className="rounded-b-none"
+                  className="rounded-b-none flex-shrink-0 px-2 sm:px-4 text-xs sm:text-sm"
                   onClick={() => navigate(item.path)}
                 >
-                  <Icon className="mr-2 h-4 w-4" />
-                  {item.label}
+                  <Icon className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                  <span className="whitespace-nowrap">{item.label}</span>
                 </Button>
               );
             })}

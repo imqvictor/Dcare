@@ -139,14 +139,14 @@ const ChildDialog = ({ open, onOpenChange, child, onSuccess }: ChildDialogProps)
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-2xl bg-[#0f1729] border-[#1e2a47]">
-        <DialogHeader className="text-center">
+      <DialogContent className="sm:max-w-2xl bg-[#0f1729] border-[#1e2a47] max-h-[90vh] overflow-hidden flex flex-col">
+        <DialogHeader className="text-center flex-shrink-0">
           <DialogTitle className="text-2xl font-bold text-white">{child ? "Edit Child" : "Add New Child"}</DialogTitle>
           <DialogDescription className="text-center bg-[#1a2438] rounded-lg p-4 mt-4 text-gray-300">
             Child Registration Form
           </DialogDescription>
         </DialogHeader>
-        <div className="space-y-4 mt-6">
+        <div className="space-y-4 mt-6 overflow-y-auto flex-1 pr-2">
           <div className="space-y-2">
             <Label htmlFor="name" className="text-gray-200">Name*</Label>
             <Input
@@ -230,7 +230,7 @@ const ChildDialog = ({ open, onOpenChange, child, onSuccess }: ChildDialogProps)
             />
           </div>
         </div>
-        <DialogFooter className="mt-6 flex justify-center gap-4">
+        <DialogFooter className="mt-6 flex justify-center gap-4 flex-shrink-0">
           <Button 
             variant="outline" 
             onClick={() => onOpenChange(false)}
