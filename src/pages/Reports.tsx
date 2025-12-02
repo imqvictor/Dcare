@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import {
   Table,
   TableBody,
@@ -14,11 +14,16 @@ import {
 import { useNavigate } from "react-router-dom";
 import { FileText } from "lucide-react";
 
-interface PaymentSummary {
-  date: string;
+interface YearlyPayment {
+  month: string;
   paid: number;
   debt: number;
 }
+
+const MONTHS = [
+  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+];
 
 interface DebtOverview {
   child_id: string;
@@ -28,7 +33,7 @@ interface DebtOverview {
 }
 
 const Reports = () => {
-  const [paymentSummary, setPaymentSummary] = useState<PaymentSummary[]>([]);
+  const [yearlyData, setYearlyData] = useState<YearlyPayment[]>([]);
   const [attendanceData, setAttendanceData] = useState<any[]>([]);
   const [debtOverview, setDebtOverview] = useState<DebtOverview[]>([]);
   const [topPerformers, setTopPerformers] = useState<any[]>([]);
@@ -36,7 +41,7 @@ const Reports = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  const COLORS = ['#22c55e', '#ef4444'];
+  const COLORS = ['hsl(var(--success))', 'hsl(var(--destructive))'];
 
   useEffect(() => {
     fetchReportData();
@@ -44,36 +49,50 @@ const Reports = () => {
 
   const fetchReportData = async () => {
     try {
-      // Fetch payment summary for last 7 days
-      const sevenDaysAgo = new Date();
-      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-      
-      const { data: payments, error: paymentsError } = await supabase
+      const currentYear = new Date().getFullYear();
+      const startOfYear = `${currentYear}-01-01`;
+      const endOfYear = `${currentYear}-12-31`;
+
+      // Fetch yearly payment data
+      const { data: yearPayments, error: yearError } = await supabase
         .from("payments")
-        .select("*")
-        .gte("payment_date", sevenDaysAgo.toISOString().split("T")[0]);
+        .select("amount, debt_amount, status, payment_date")
+        .gte("payment_date", startOfYear)
+        .lte("payment_date", endOfYear);
 
-      if (paymentsError) throw paymentsError;
+      if (yearError) throw yearError;
 
-      // Group by date
-      const summaryMap = new Map<string, { paid: number; debt: number }>();
-      payments?.forEach((p) => {
-        const date = p.payment_date;
-        const current = summaryMap.get(date) || { paid: 0, debt: 0 };
-        if (p.status === "paid") {
-          current.paid += Number(p.amount);
-        } else {
-          current.debt += Number(p.debt_amount);
+      // Initialize monthly data
+      const monthlyStats: { [key: number]: { paid: number; debt: number } } = {};
+      for (let i = 0; i < 12; i++) {
+        monthlyStats[i] = { paid: 0, debt: 0 };
+      }
+
+      // Aggregate data by month
+      yearPayments?.forEach((payment) => {
+        const paymentMonth = new Date(payment.payment_date).getMonth();
+        if (payment.status === "paid") {
+          monthlyStats[paymentMonth].paid += Number(payment.amount) || 0;
         }
-        summaryMap.set(date, current);
+        monthlyStats[paymentMonth].debt += Number(payment.debt_amount) || 0;
       });
 
-      const summary = Array.from(summaryMap.entries()).map(([date, data]) => ({
-        date: new Date(date).toLocaleDateString(),
-        paid: data.paid,
-        debt: data.debt,
+      // Format data for chart
+      const chartData = MONTHS.map((month, index) => ({
+        month,
+        paid: monthlyStats[index].paid,
+        debt: monthlyStats[index].debt,
       }));
-      setPaymentSummary(summary);
+      setYearlyData(chartData);
+
+      // Fetch attendance data for pie chart
+      const { data: payments, error: paymentsError } = await supabase
+        .from("payments")
+        .select("attendance_status")
+        .gte("payment_date", startOfYear)
+        .lte("payment_date", endOfYear);
+
+      if (paymentsError) throw paymentsError;
 
       // Attendance overview
       const presentCount = payments?.filter(p => p.attendance_status === "present").length || 0;
@@ -159,25 +178,50 @@ const Reports = () => {
         <p className="text-muted-foreground mt-1">View payment summaries, attendance, and debt overview</p>
       </div>
 
+      <Card>
+        <CardHeader>
+          <CardTitle>Payment Summary – {new Date().getFullYear()}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ResponsiveContainer width="100%" height={350}>
+            <LineChart data={yearlyData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+              <XAxis 
+                dataKey="month" 
+                tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                axisLine={{ stroke: 'hsl(var(--border))' }}
+              />
+              <YAxis 
+                tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                axisLine={{ stroke: 'hsl(var(--border))' }}
+                tickFormatter={(value) => `Ksh ${value.toLocaleString()}`}
+              />
+              <Tooltip formatter={(value) => formatCurrency(Number(value))} />
+              <Legend />
+              <Line 
+                type="monotone" 
+                dataKey="paid" 
+                name="Paid (Ksh)"
+                stroke="hsl(var(--success))" 
+                strokeWidth={3}
+                dot={{ fill: 'hsl(var(--success))', strokeWidth: 2, r: 4 }}
+                activeDot={{ r: 6, strokeWidth: 2 }}
+              />
+              <Line 
+                type="monotone" 
+                dataKey="debt" 
+                name="Debt (Ksh)"
+                stroke="hsl(var(--destructive))" 
+                strokeWidth={3}
+                dot={{ fill: 'hsl(var(--destructive))', strokeWidth: 2, r: 4 }}
+                activeDot={{ r: 6, strokeWidth: 2 }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
+
       <div className="grid md:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Payment Summary (Last 7 Days)</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={paymentSummary}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" />
-                <YAxis />
-                <Tooltip formatter={(value) => formatCurrency(Number(value))} />
-                <Legend />
-                <Bar dataKey="paid" fill="#22c55e" name="Paid" />
-                <Bar dataKey="debt" fill="#ef4444" name="Debt" />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
 
         <Card>
           <CardHeader>
