@@ -107,11 +107,14 @@ const ChildProfile = () => {
     return `Ksh ${Math.abs(amount).toFixed(2)}`;
   };
 
-  const totalPaid = payments
-    .filter((p) => p.status === "paid")
-    .reduce((sum, p) => sum + Number(p.amount), 0);
+  // Calculate total paid as (amount charged - remaining debt) for each record
+  // This correctly accounts for partial payments
+  const totalPaid = payments.reduce((sum, p) => {
+    const amountPaid = Number(p.amount) - Number(p.debt_amount || 0);
+    return sum + Math.max(0, amountPaid);
+  }, 0);
 
-  const totalDebt = payments.reduce((sum, p) => sum + Number(p.debt_amount), 0);
+  const totalDebt = payments.reduce((sum, p) => sum + Number(p.debt_amount || 0), 0);
 
   const handlePartialPayment = async () => {
     const amount = parseFloat(partialPaymentAmount);
