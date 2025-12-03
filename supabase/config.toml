@@ -1,1 +1,4 @@
 project_id = "halhamgfthhuonehsggx"
+
+[functions.daily-attendance-reset]
+verify_jwt = false

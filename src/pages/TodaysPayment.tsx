@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
+import { useMidnightReset } from "@/hooks/use-midnight-reset";
 import {
   Table,
   TableBody,
@@ -31,35 +32,17 @@ const TodaysPayment = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
 
+  const handleMidnightReset = useCallback(() => {
+    console.log("Midnight reset triggered - refreshing today's payments");
+    setPayments([]);
+    fetchTodaysPayments();
+  }, []);
+
+  // Use the midnight reset hook for precise reset at 00:00
+  useMidnightReset(handleMidnightReset);
+
   useEffect(() => {
     fetchTodaysPayments();
-
-    // Check for date change every minute
-    const dateCheckInterval = setInterval(() => {
-      const currentDate = new Date().toISOString().split("T")[0];
-      const lastFetchDate = localStorage.getItem("lastPaymentFetchDate");
-      
-      if (lastFetchDate !== currentDate) {
-        localStorage.setItem("lastPaymentFetchDate", currentDate);
-        fetchTodaysPayments();
-      }
-    }, 60000); // Check every minute
-
-    // Refetch when page becomes visible
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === "visible") {
-        fetchTodaysPayments();
-      }
-    };
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-
-    // Set initial date
-    localStorage.setItem("lastPaymentFetchDate", new Date().toISOString().split("T")[0]);
-
-    return () => {
-      clearInterval(dateCheckInterval);
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-    };
   }, []);
 
   const fetchTodaysPayments = async () => {

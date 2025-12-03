@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import ChildDialog from "@/components/ChildDialog";
 import { useNavigate } from "react-router-dom";
+import { useMidnightReset } from "@/hooks/use-midnight-reset";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -53,36 +54,18 @@ const Children = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
 
+  const handleMidnightReset = useCallback(() => {
+    console.log("Midnight reset triggered - refreshing attendance data");
+    setAttendance({});
+    fetchTodaysAttendance();
+  }, []);
+
+  // Use the midnight reset hook for precise reset at 00:00
+  useMidnightReset(handleMidnightReset);
+
   useEffect(() => {
     fetchChildren();
     fetchTodaysAttendance();
-
-    // Check for date change every minute
-    const dateCheckInterval = setInterval(() => {
-      const currentDate = new Date().toISOString().split("T")[0];
-      const lastFetchDate = localStorage.getItem("lastFetchDate");
-      
-      if (lastFetchDate !== currentDate) {
-        localStorage.setItem("lastFetchDate", currentDate);
-        fetchTodaysAttendance();
-      }
-    }, 60000); // Check every minute
-
-    // Refetch when page becomes visible
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === "visible") {
-        fetchTodaysAttendance();
-      }
-    };
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-
-    // Set initial date
-    localStorage.setItem("lastFetchDate", new Date().toISOString().split("T")[0]);
-
-    return () => {
-      clearInterval(dateCheckInterval);
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-    };
   }, []);
 
   const fetchChildren = async () => {
