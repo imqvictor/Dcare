@@ -11,6 +11,7 @@ import TodaysPayment from "./pages/TodaysPayment";
 import ChildProfile from "./pages/ChildProfile";
 import Reports from "./pages/Reports";
 import Dashboard from "./pages/Dashboard";
+import Settings from "./pages/Settings";
 import Layout from "./components/Layout";
 import NotFound from "./pages/NotFound";
 import { ThemeProvider } from "./contexts/ThemeContext";
@@ -60,6 +61,7 @@ const App = () => (
             <Route path="/child/:childId" element={<ProtectedRoute><ChildProfile /></ProtectedRoute>} />
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
+            <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

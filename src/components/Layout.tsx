@@ -1,10 +1,7 @@
 import { ReactNode } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Baby, Users, DollarSign, LogOut, BarChart3, Moon, Sun } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
-import { useTheme } from "@/contexts/ThemeContext";
+import { Baby, Users, DollarSign, BarChart3, Settings } from "lucide-react";
 
 interface LayoutProps {
   children: ReactNode;
@@ -13,24 +10,6 @@ interface LayoutProps {
 const Layout = ({ children }: LayoutProps) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { toast } = useToast();
-  const { theme, toggleTheme } = useTheme();
-
-  const handleThemeToggle = () => {
-    toggleTheme();
-    toast({
-      title: theme === "light" ? "🌗 Switched to Dark Mode" : "☀️ Switched to Light Mode",
-    });
-  };
-
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    toast({
-      title: "Logged out",
-      description: "Successfully logged out of your account.",
-    });
-    navigate("/auth");
-  };
 
   const navItems = [
     { path: "/children", label: "Children", icon: Users },
@@ -52,15 +31,14 @@ const Layout = ({ children }: LayoutProps) => {
               <p className="text-xs text-muted-foreground">Admin Portal</p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" onClick={handleThemeToggle}>
-              {theme === "light" ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
-            </Button>
-            <Button variant="outline" size="sm" onClick={handleLogout}>
-              <LogOut className="mr-2 h-4 w-4" />
-              Logout
-            </Button>
-          </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate("/settings")}
+            className={location.pathname === "/settings" ? "bg-muted" : ""}
+          >
+            <Settings className="h-5 w-5" />
+          </Button>
         </div>
       </header>
 
