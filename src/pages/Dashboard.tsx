@@ -1,8 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart3, Users, FileText, ChevronRight, DollarSign, AlertCircle, TrendingUp, Calendar } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import { useMidnightReset } from "@/hooks/use-midnight-reset";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -13,35 +14,16 @@ const Dashboard = () => {
   const [monthlyCollection, setMonthlyCollection] = useState(0);
   const [loading, setLoading] = useState(true);
 
+  const handleMidnightReset = useCallback(() => {
+    console.log("Midnight reset triggered - refreshing dashboard data");
+    fetchDashboardData();
+  }, []);
+
+  // Use the midnight reset hook for precise reset at 00:00
+  useMidnightReset(handleMidnightReset);
+
   useEffect(() => {
     fetchDashboardData();
-
-    // Check for date change every minute
-    const dateCheckInterval = setInterval(() => {
-      const currentDate = new Date().toISOString().split("T")[0];
-      const lastFetchDate = localStorage.getItem("lastDashboardFetchDate");
-      
-      if (lastFetchDate !== currentDate) {
-        localStorage.setItem("lastDashboardFetchDate", currentDate);
-        fetchDashboardData();
-      }
-    }, 60000); // Check every minute
-
-    // Refetch when page becomes visible
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === "visible") {
-        fetchDashboardData();
-      }
-    };
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-
-    // Set initial date
-    localStorage.setItem("lastDashboardFetchDate", new Date().toISOString().split("T")[0]);
-
-    return () => {
-      clearInterval(dateCheckInterval);
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-    };
   }, []);
 
   const fetchDashboardData = async () => {
