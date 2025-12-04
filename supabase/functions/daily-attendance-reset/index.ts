@@ -15,14 +15,14 @@ Deno.serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const supabase = createClient(supabaseUrl, supabaseKey)
 
-    // Get yesterday's date (since this runs at midnight)
+    // Get yesterday's date (since this runs at midnight/just after 23:59)
     const yesterday = new Date()
     yesterday.setDate(yesterday.getDate() - 1)
     const yesterdayStr = yesterday.toISOString().split('T')[0]
 
     console.log(`Running daily reset for date: ${yesterdayStr}`)
 
-    // Get all children
+    // Get all children with their payment amounts
     const { data: children, error: childrenError } = await supabase
       .from('children')
       .select('id, payment_amount')
@@ -33,8 +33,8 @@ Deno.serve(async (req) => {
 
     console.log(`Found ${children?.length || 0} children`)
 
-    // Check each child for yesterday's attendance
     const absentChildren = []
+    const unpaidChildren = []
     
     for (const child of children || []) {
       const { data: payment, error: paymentError } = await supabase
@@ -49,7 +49,7 @@ Deno.serve(async (req) => {
         continue
       }
 
-      // If no record exists for yesterday, mark as absent
+      // Case 1: No record exists - mark as absent
       if (!payment) {
         absentChildren.push({
           child_id: child.id,
@@ -59,6 +59,15 @@ Deno.serve(async (req) => {
           amount: 0,
           debt_amount: child.payment_amount,
           arrival_time: null,
+          note: 'Automatically marked absent - no attendance recorded',
+        })
+      }
+      // Case 2: Present but no payment status set (status is 'pending') - mark as unpaid
+      else if (payment.attendance_status === 'present' && payment.status === 'pending') {
+        unpaidChildren.push({
+          id: payment.id,
+          child_id: child.id,
+          debt_amount: child.payment_amount,
         })
       }
     }
@@ -78,11 +87,32 @@ Deno.serve(async (req) => {
       console.log('No children to mark as absent')
     }
 
+    // Update pending records to unpaid
+    for (const record of unpaidChildren) {
+      const { error: updateError } = await supabase
+        .from('payments')
+        .update({
+          status: 'unpaid',
+          debt_amount: record.debt_amount,
+          note: 'Automatically marked unpaid - no payment status recorded',
+        })
+        .eq('id', record.id)
+
+      if (updateError) {
+        console.error(`Error updating payment ${record.id} to unpaid:`, updateError)
+      }
+    }
+
+    if (unpaidChildren.length > 0) {
+      console.log(`Marked ${unpaidChildren.length} present children as unpaid for ${yesterdayStr}`)
+    }
+
     return new Response(
       JSON.stringify({
         success: true,
         date: yesterdayStr,
         markedAbsent: absentChildren.length,
+        markedUnpaid: unpaidChildren.length,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )

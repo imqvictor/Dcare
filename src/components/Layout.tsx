@@ -12,9 +12,9 @@ const Layout = ({ children }: LayoutProps) => {
   const location = useLocation();
 
   const navItems = [
+    { path: "/dashboard", label: "Dashboard", icon: BarChart3 },
     { path: "/children", label: "Children", icon: Users },
     { path: "/today", label: "Today's Payment", icon: DollarSign },
-    { path: "/dashboard", label: "Dashboard", icon: BarChart3 },
   ];
 
   return (
