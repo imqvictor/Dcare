@@ -55,7 +55,7 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/auth" element={<Auth />} />
-            <Route path="/" element={<Navigate to="/children" replace />} />
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
             <Route path="/children" element={<ProtectedRoute><Children /></ProtectedRoute>} />
             <Route path="/today" element={<ProtectedRoute><TodaysPayment /></ProtectedRoute>} />
             <Route path="/child/:childId" element={<ProtectedRoute><ChildProfile /></ProtectedRoute>} />
