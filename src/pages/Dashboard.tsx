@@ -132,7 +132,10 @@ const Dashboard = () => {
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-success/10 to-success/5 border-success/20">
+        <Card 
+          className="bg-gradient-to-br from-success/10 to-success/5 border-success/20 cursor-pointer hover:border-success/40 transition-all hover:shadow-md"
+          onClick={() => navigate("/today")}
+        >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Today's Collection Target</CardTitle>
             <DollarSign className="h-4 w-4 text-success" />
@@ -149,7 +152,10 @@ const Dashboard = () => {
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-destructive/10 to-destructive/5 border-destructive/20">
+        <Card 
+          className="bg-gradient-to-br from-destructive/10 to-destructive/5 border-destructive/20 cursor-pointer hover:border-destructive/40 transition-all hover:shadow-md"
+          onClick={() => navigate("/reports")}
+        >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Outstanding Debt</CardTitle>
             <AlertCircle className="h-4 w-4 text-destructive" />
