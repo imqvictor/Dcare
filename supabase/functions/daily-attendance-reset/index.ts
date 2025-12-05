@@ -49,7 +49,7 @@ Deno.serve(async (req) => {
         continue
       }
 
-      // Case 1: No record exists - mark as absent
+      // Case 1: No record exists - mark as absent (debt = 0 for absent children)
       if (!payment) {
         absentChildren.push({
           child_id: child.id,
@@ -57,7 +57,7 @@ Deno.serve(async (req) => {
           attendance_status: 'absent',
           status: 'unpaid',
           amount: 0,
-          debt_amount: child.payment_amount,
+          debt_amount: 0,
           arrival_time: null,
           note: 'Automatically marked absent - no attendance recorded',
         })
