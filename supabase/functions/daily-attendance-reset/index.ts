@@ -59,7 +59,7 @@ Deno.serve(async (req) => {
           amount: 0,
           debt_amount: 0,
           arrival_time: null,
-          note: 'Automatically marked absent - no attendance recorded',
+          note: 'Marked absent - no attendance recorded',
         })
       }
       // Case 2: Present but no payment status set (status is 'pending') - mark as unpaid

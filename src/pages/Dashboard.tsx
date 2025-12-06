@@ -152,10 +152,7 @@ const Dashboard = () => {
           </CardContent>
         </Card>
 
-        <Card 
-          className="bg-gradient-to-br from-destructive/10 to-destructive/5 border-destructive/20 cursor-pointer hover:border-destructive/40 transition-all hover:shadow-md"
-          onClick={() => navigate("/reports")}
-        >
+        <Card className="bg-gradient-to-br from-destructive/10 to-destructive/5 border-destructive/20">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Outstanding Debt</CardTitle>
             <AlertCircle className="h-4 w-4 text-destructive" />
