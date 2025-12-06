@@ -34,10 +34,16 @@ const Layout = ({ children }: LayoutProps) => {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => navigate("/settings")}
-            className={location.pathname === "/settings" ? "bg-muted" : ""}
+            onClick={() => {
+              if (location.pathname === "/settings") {
+                navigate(-1);
+              } else {
+                navigate("/settings");
+              }
+            }}
+            className={`transition-all duration-200 ${location.pathname === "/settings" ? "bg-muted rotate-90" : "hover:rotate-45"}`}
           >
-            <Settings className="h-5 w-5" />
+            <Settings className="h-5 w-5 transition-transform duration-200" />
           </Button>
         </div>
       </header>
