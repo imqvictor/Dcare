@@ -187,7 +187,6 @@ const ChildDialog = ({ open, onOpenChange, child, onSuccess }: ChildDialogProps)
                 type="text"
                 value={formData.age}
                 onChange={(e) => setFormData({ ...formData, age: e.target.value })}
-                placeholder="e.g. 3 years, 7 months, 18 months"
                 className="bg-[#1a2438] border-[#2d3b56] text-white placeholder:text-gray-500 focus:border-primary focus:ring-primary"
               />
             </div>
