@@ -30,7 +30,6 @@ import {
 interface Child {
   id: string;
   name: string;
-  age: number;
   class: string | null;
   admission_number: string | null;
   guardian_name: string;
@@ -299,10 +298,6 @@ const ChildProfile = () => {
             <div>
               <p className="text-sm text-muted-foreground">Admission Number</p>
               <p className="font-semibold">{child.admission_number || "N/A"}</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Age</p>
-              <p className="font-semibold">{child.age} years</p>
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Guardian Name</p>

@@ -16,7 +16,6 @@ import { z } from "zod";
 
 const childSchema = z.object({
   name: z.string().trim().min(1, { message: "Name is required" }).max(100),
-  age: z.string().trim().min(1, { message: "Age is required" }).max(50),
   admission_number: z.string().trim().min(1, { message: "Admission number is required" }).max(20),
   guardian_name: z.string().trim().min(1, { message: "Guardian name is required" }).max(100),
   contact_number: z.string().trim()
@@ -43,7 +42,6 @@ interface ChildDialogProps {
 const ChildDialog = ({ open, onOpenChange, child, onSuccess }: ChildDialogProps) => {
   const [formData, setFormData] = useState({
     name: "",
-    age: "",
     admission_number: "",
     guardian_name: "",
     contact_number: "",
@@ -69,7 +67,6 @@ const ChildDialog = ({ open, onOpenChange, child, onSuccess }: ChildDialogProps)
     if (child) {
       setFormData({
         name: child.name || "",
-        age: child.age?.toString() || "",
         admission_number: child.admission_number || "",
         guardian_name: child.guardian_name,
         contact_number: child.contact_number,
@@ -79,7 +76,6 @@ const ChildDialog = ({ open, onOpenChange, child, onSuccess }: ChildDialogProps)
     } else {
       setFormData({
         name: "",
-        age: "",
         admission_number: "",
         guardian_name: "",
         contact_number: "",
@@ -103,7 +99,6 @@ const ChildDialog = ({ open, onOpenChange, child, onSuccess }: ChildDialogProps)
           .from("children")
           .update({
             name: validated.name,
-            age: parseInt(validated.age.replace(/\D/g, '')) || 0,
             guardian_name: validated.guardian_name,
             contact_number: validated.contact_number,
             admission_date: validated.admission_date,
@@ -121,7 +116,6 @@ const ChildDialog = ({ open, onOpenChange, child, onSuccess }: ChildDialogProps)
       } else {
         const { error } = await supabase.from("children").insert([{
           name: validated.name,
-          age: parseInt(validated.age.replace(/\D/g, '')) || 0,
           guardian_name: validated.guardian_name,
           contact_number: validated.contact_number,
           admission_date: validated.admission_date,
@@ -179,27 +173,15 @@ const ChildDialog = ({ open, onOpenChange, child, onSuccess }: ChildDialogProps)
             />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="age" className="text-gray-200">Age*</Label>
-              <Input
-                id="age"
-                type="text"
-                value={formData.age}
-                onChange={(e) => setFormData({ ...formData, age: e.target.value })}
-                className="bg-[#1a2438] border-[#2d3b56] text-white placeholder:text-gray-500 focus:border-primary focus:ring-primary"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="admission_number" className="text-gray-200">Admission Number*</Label>
-              <Input
-                id="admission_number"
-                value={formData.admission_number}
-                onChange={(e) => setFormData({ ...formData, admission_number: e.target.value })}
-                placeholder="ADM001"
-                className="bg-[#1a2438] border-[#2d3b56] text-white placeholder:text-gray-500 focus:border-primary focus:ring-primary"
-              />
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="admission_number" className="text-gray-200">Admission Number*</Label>
+            <Input
+              id="admission_number"
+              value={formData.admission_number}
+              onChange={(e) => setFormData({ ...formData, admission_number: e.target.value })}
+              placeholder="ADM001"
+              className="bg-[#1a2438] border-[#2d3b56] text-white placeholder:text-gray-500 focus:border-primary focus:ring-primary"
+            />
           </div>
           
           <div className="space-y-2">
