@@ -16,10 +16,19 @@ import { z } from "zod";
 
 const childSchema = z.object({
   name: z.string().trim().min(1, { message: "Name is required" }).max(100),
-  age: z.string().trim().min(1, { message: "Age is required" }).max(20),
+  age: z.string().trim().min(1, { message: "Age is required" }).max(50),
   admission_number: z.string().trim().min(1, { message: "Admission number is required" }).max(20),
   guardian_name: z.string().trim().min(1, { message: "Guardian name is required" }).max(100),
-  contact_number: z.string().trim().min(1, { message: "Guardian phone is required" }).max(20),
+  contact_number: z.string().trim()
+    .min(1, { message: "Guardian phone is required" })
+    .refine((val) => {
+      const digitsOnly = val.replace(/\D/g, '');
+      return digitsOnly.length >= 10;
+    }, { message: "no less than ten" })
+    .refine((val) => {
+      const digitsOnly = val.replace(/\D/g, '');
+      return digitsOnly.length <= 10;
+    }, { message: "no more than ten" }),
   admission_date: z.string().min(1, { message: "Admission date is required" }),
   payment_amount: z.number().min(0, { message: "Payment amount must be 0 or greater" }),
 });
@@ -42,7 +51,19 @@ const ChildDialog = ({ open, onOpenChange, child, onSuccess }: ChildDialogProps)
     payment_amount: "",
   });
   const [loading, setLoading] = useState(false);
+  const [contactError, setContactError] = useState("");
   const { toast } = useToast();
+
+  const validateContact = (value: string) => {
+    const digitsOnly = value.replace(/\D/g, '');
+    if (digitsOnly.length < 10) {
+      setContactError("no less than ten");
+    } else if (digitsOnly.length > 10) {
+      setContactError("no more than ten");
+    } else {
+      setContactError("");
+    }
+  };
 
   useEffect(() => {
     if (child) {
@@ -82,7 +103,7 @@ const ChildDialog = ({ open, onOpenChange, child, onSuccess }: ChildDialogProps)
           .from("children")
           .update({
             name: validated.name,
-            age: parseInt(validated.age),
+            age: parseInt(validated.age.replace(/\D/g, '')) || 0,
             guardian_name: validated.guardian_name,
             contact_number: validated.contact_number,
             admission_date: validated.admission_date,
@@ -100,7 +121,7 @@ const ChildDialog = ({ open, onOpenChange, child, onSuccess }: ChildDialogProps)
       } else {
         const { error } = await supabase.from("children").insert([{
           name: validated.name,
-          age: parseInt(validated.age),
+          age: parseInt(validated.age.replace(/\D/g, '')) || 0,
           guardian_name: validated.guardian_name,
           contact_number: validated.contact_number,
           admission_date: validated.admission_date,
@@ -166,7 +187,7 @@ const ChildDialog = ({ open, onOpenChange, child, onSuccess }: ChildDialogProps)
                 type="text"
                 value={formData.age}
                 onChange={(e) => setFormData({ ...formData, age: e.target.value })}
-                placeholder="5"
+                placeholder="e.g. 3 years, 7 months, 18 months"
                 className="bg-[#1a2438] border-[#2d3b56] text-white placeholder:text-gray-500 focus:border-primary focus:ring-primary"
               />
             </div>
@@ -209,10 +230,16 @@ const ChildDialog = ({ open, onOpenChange, child, onSuccess }: ChildDialogProps)
               <Input
                 id="contact_number"
                 value={formData.contact_number}
-                onChange={(e) => setFormData({ ...formData, contact_number: e.target.value })}
-                placeholder="+254712345678"
-                className="bg-[#1a2438] border-[#2d3b56] text-white placeholder:text-gray-500 focus:border-primary focus:ring-primary"
+                onChange={(e) => {
+                  setFormData({ ...formData, contact_number: e.target.value });
+                  validateContact(e.target.value);
+                }}
+                placeholder="0712345678"
+                className={`bg-[#1a2438] border-[#2d3b56] text-white placeholder:text-gray-500 focus:border-primary focus:ring-primary ${contactError ? "border-red-500 focus:border-red-500" : ""}`}
               />
+              {contactError && (
+                <p className="text-sm text-red-500">{contactError}</p>
+              )}
             </div>
           </div>
 
