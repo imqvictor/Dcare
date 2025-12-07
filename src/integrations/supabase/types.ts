@@ -18,7 +18,6 @@ export type Database = {
         Row: {
           admission_date: string
           admission_number: string | null
-          age: number
           class: string | null
           contact_number: string
           created_at: string
@@ -31,7 +30,6 @@ export type Database = {
         Insert: {
           admission_date?: string
           admission_number?: string | null
-          age: number
           class?: string | null
           contact_number: string
           created_at?: string
@@ -44,7 +42,6 @@ export type Database = {
         Update: {
           admission_date?: string
           admission_number?: string | null
-          age?: number
           class?: string | null
           contact_number?: string
           created_at?: string

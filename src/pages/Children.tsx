@@ -23,7 +23,6 @@ import {
 interface Child {
   id: string;
   name: string;
-  age: number;
   guardian_name: string;
   contact_number: string;
   admission_date: string;
