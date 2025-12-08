@@ -26,6 +26,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { calculateCurrentAge, formatAge } from "@/lib/age-utils";
 
 interface Child {
   id: string;
@@ -36,6 +37,9 @@ interface Child {
   contact_number: string;
   admission_date: string;
   payment_amount: number;
+  age_value: number | null;
+  age_unit: string | null;
+  age_registered_at: string | null;
 }
 
 interface Payment {
@@ -313,6 +317,18 @@ const ChildProfile = () => {
                 {new Date(child.admission_date).toLocaleDateString()}
               </p>
             </div>
+            {child.age_value && child.age_unit && child.age_registered_at && (
+              <div>
+                <p className="text-sm text-muted-foreground">Age</p>
+                <p className="font-semibold">
+                  {formatAge(calculateCurrentAge(
+                    child.age_value,
+                    child.age_unit as 'months' | 'years',
+                    new Date(child.age_registered_at)
+                  ))}
+                </p>
+              </div>
+            )}
             <div>
               <p className="text-sm text-muted-foreground">Daily Payment Amount</p>
               <p className="font-semibold text-primary">

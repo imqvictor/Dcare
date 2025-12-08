@@ -18,6 +18,9 @@ export type Database = {
         Row: {
           admission_date: string
           admission_number: string | null
+          age_registered_at: string | null
+          age_unit: string | null
+          age_value: number | null
           class: string | null
           contact_number: string
           created_at: string
@@ -30,6 +33,9 @@ export type Database = {
         Insert: {
           admission_date?: string
           admission_number?: string | null
+          age_registered_at?: string | null
+          age_unit?: string | null
+          age_value?: number | null
           class?: string | null
           contact_number: string
           created_at?: string
@@ -42,6 +48,9 @@ export type Database = {
         Update: {
           admission_date?: string
           admission_number?: string | null
+          age_registered_at?: string | null
+          age_unit?: string | null
+          age_value?: number | null
           class?: string | null
           contact_number?: string
           created_at?: string
