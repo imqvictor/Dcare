@@ -19,7 +19,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { calculateCurrentAge, formatAge } from "@/lib/age-utils";
+
 
 interface Child {
   id: string;
@@ -387,15 +387,6 @@ const Children = () => {
                         Ksh {child.payment_amount.toFixed(2)}
                       </span>
                     </p>
-                    {child.age_value && child.age_unit && child.age_registered_at && (
-                      <p className="text-sm text-muted-foreground mt-1">
-                        Age: {formatAge(calculateCurrentAge(
-                          child.age_value,
-                          child.age_unit as 'months' | 'years',
-                          new Date(child.age_registered_at)
-                        ))}
-                      </p>
-                    )}
                   </div>
 
                   <div className="grid grid-cols-2 gap-3" onClick={(e) => e.stopPropagation()}>
