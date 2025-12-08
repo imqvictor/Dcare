@@ -11,8 +11,16 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
+import { normalizeAgeUnit } from "@/lib/age-utils";
 
 const childSchema = z.object({
   name: z.string().trim().min(1, { message: "Name is required" }).max(100),
@@ -30,6 +38,8 @@ const childSchema = z.object({
     }, { message: "no more than ten" }),
   admission_date: z.string().min(1, { message: "Admission date is required" }),
   payment_amount: z.number().min(0, { message: "Payment amount must be 0 or greater" }),
+  age_value: z.number().min(1, { message: "Age is required" }).optional(),
+  age_unit: z.enum(['months', 'years']).optional(),
 });
 
 interface ChildDialogProps {
@@ -47,6 +57,8 @@ const ChildDialog = ({ open, onOpenChange, child, onSuccess }: ChildDialogProps)
     contact_number: "",
     admission_date: new Date().toISOString().split("T")[0],
     payment_amount: "",
+    age_value: "",
+    age_unit: "years" as string,
   });
   const [loading, setLoading] = useState(false);
   const [contactError, setContactError] = useState("");
@@ -72,6 +84,8 @@ const ChildDialog = ({ open, onOpenChange, child, onSuccess }: ChildDialogProps)
         contact_number: child.contact_number,
         admission_date: child.admission_date,
         payment_amount: child.payment_amount?.toString() || "",
+        age_value: child.age_value?.toString() || "",
+        age_unit: child.age_unit || "years",
       });
     } else {
       setFormData({
@@ -81,30 +95,49 @@ const ChildDialog = ({ open, onOpenChange, child, onSuccess }: ChildDialogProps)
         contact_number: "",
         admission_date: new Date().toISOString().split("T")[0],
         payment_amount: "",
+        age_value: "",
+        age_unit: "years",
       });
     }
   }, [child, open]);
 
   const handleSubmit = async () => {
     try {
+      const ageValue = formData.age_value ? parseInt(formData.age_value) : undefined;
+      const normalizedAgeUnit = normalizeAgeUnit(formData.age_unit);
+      
       const validated = childSchema.parse({
         ...formData,
         payment_amount: parseFloat(formData.payment_amount),
+        age_value: ageValue,
+        age_unit: normalizedAgeUnit,
       });
 
       setLoading(true);
 
+      const childData: any = {
+        name: validated.name,
+        guardian_name: validated.guardian_name,
+        contact_number: validated.contact_number,
+        admission_date: validated.admission_date,
+        admission_number: validated.admission_number,
+        payment_amount: validated.payment_amount,
+      };
+
+      // Only include age fields if age was provided
+      if (ageValue) {
+        childData.age_value = ageValue;
+        childData.age_unit = normalizedAgeUnit;
+        // Only set registration date on new entries or if age changed
+        if (!child || child.age_value !== ageValue || child.age_unit !== normalizedAgeUnit) {
+          childData.age_registered_at = new Date().toISOString();
+        }
+      }
+
       if (child) {
         const { error } = await supabase
           .from("children")
-          .update({
-            name: validated.name,
-            guardian_name: validated.guardian_name,
-            contact_number: validated.contact_number,
-            admission_date: validated.admission_date,
-            admission_number: validated.admission_number,
-            payment_amount: validated.payment_amount,
-          })
+          .update(childData)
           .eq("id", child.id);
 
         if (error) throw error;
@@ -114,14 +147,7 @@ const ChildDialog = ({ open, onOpenChange, child, onSuccess }: ChildDialogProps)
           description: "Child record updated successfully",
         });
       } else {
-        const { error } = await supabase.from("children").insert([{
-          name: validated.name,
-          guardian_name: validated.guardian_name,
-          contact_number: validated.contact_number,
-          admission_date: validated.admission_date,
-          admission_number: validated.admission_number,
-          payment_amount: validated.payment_amount,
-        }]);
+        const { error } = await supabase.from("children").insert([childData]);
 
         if (error) throw error;
 
@@ -173,15 +199,45 @@ const ChildDialog = ({ open, onOpenChange, child, onSuccess }: ChildDialogProps)
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="admission_number" className="text-gray-200">Admission Number*</Label>
-            <Input
-              id="admission_number"
-              value={formData.admission_number}
-              onChange={(e) => setFormData({ ...formData, admission_number: e.target.value })}
-              placeholder="ADM001"
-              className="bg-[#1a2438] border-[#2d3b56] text-white placeholder:text-gray-500 focus:border-primary focus:ring-primary"
-            />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="admission_number" className="text-gray-200">Admission Number*</Label>
+              <Input
+                id="admission_number"
+                value={formData.admission_number}
+                onChange={(e) => setFormData({ ...formData, admission_number: e.target.value })}
+                placeholder="ADM001"
+                className="bg-[#1a2438] border-[#2d3b56] text-white placeholder:text-gray-500 focus:border-primary focus:ring-primary"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="age" className="text-gray-200">Age</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="age"
+                  type="number"
+                  min="1"
+                  value={formData.age_value}
+                  onChange={(e) => setFormData({ ...formData, age_value: e.target.value })}
+                  placeholder="e.g. 3"
+                  className="bg-[#1a2438] border-[#2d3b56] text-white placeholder:text-gray-500 focus:border-primary focus:ring-primary flex-1"
+                />
+                <Select
+                  value={formData.age_unit}
+                  onValueChange={(value) => setFormData({ ...formData, age_unit: value })}
+                >
+                  <SelectTrigger className="w-[120px] bg-[#1a2438] border-[#2d3b56] text-white">
+                    <SelectValue placeholder="Unit" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-[#1a2438] border-[#2d3b56]">
+                    <SelectItem value="month" className="text-white hover:bg-[#2d3b56]">month</SelectItem>
+                    <SelectItem value="months" className="text-white hover:bg-[#2d3b56]">months</SelectItem>
+                    <SelectItem value="year" className="text-white hover:bg-[#2d3b56]">year</SelectItem>
+                    <SelectItem value="years" className="text-white hover:bg-[#2d3b56]">years</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
           </div>
           
           <div className="space-y-2">
