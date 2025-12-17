@@ -61,6 +61,7 @@ const ChildProfile = () => {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [partialPaymentAmount, setPartialPaymentAmount] = useState("");
+  const [extraChargeAmount, setExtraChargeAmount] = useState("");
   const { toast } = useToast();
 
   useEffect(() => {
@@ -175,6 +176,51 @@ const ChildProfile = () => {
       });
 
       setPartialPaymentAmount("");
+      fetchChildData();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleExtraCharge = async () => {
+    const amount = parseFloat(extraChargeAmount);
+    
+    if (!amount || amount <= 0) {
+      toast({
+        title: "Invalid Amount",
+        description: "Please enter a valid charge amount",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      
+      // Create a new payment record with the extra charge as debt
+      const { error } = await supabase
+        .from("payments")
+        .insert({
+          child_id: childId,
+          amount: amount,
+          payment_date: today,
+          status: "unpaid",
+          debt_amount: amount,
+          note: "Extra charge"
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: `Extra charge of ${formatCurrency(amount)} added successfully.`,
+      });
+
+      setExtraChargeAmount("");
       fetchChildData();
     } catch (error: any) {
       toast({
@@ -356,35 +402,54 @@ const ChildProfile = () => {
             </Card>
             <Card className="bg-muted/30">
               <CardHeader className="pb-3">
-                <CardTitle className="text-base">Pay Debt</CardTitle>
+                <CardTitle className="text-base">Payment Actions</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
+              <CardContent className="space-y-4">
                 <div className="flex gap-2 items-center">
+                  <Input
+                    type="number"
+                    placeholder="Amount"
+                    value={partialPaymentAmount}
+                    onChange={(e) => setPartialPaymentAmount(e.target.value)}
+                    disabled={totalDebt === 0}
+                    className="bg-background flex-1"
+                    min="0"
+                    step="0.01"
+                  />
                   <Button 
                     onClick={handlePartialPayment}
                     disabled={totalDebt === 0 || !partialPaymentAmount}
-                    className="shrink-0"
+                    className="shrink-0 min-w-[100px]"
                     size="sm"
                   >
                     Pay
                   </Button>
+                </div>
+                
+                <div className="flex gap-2 items-center">
                   <Input
                     type="number"
-                    placeholder="Amount Paid"
-                    value={partialPaymentAmount}
-                    onChange={(e) => setPartialPaymentAmount(e.target.value)}
-                    disabled={totalDebt === 0}
-                    className="bg-background"
+                    placeholder="Amount"
+                    value={extraChargeAmount}
+                    onChange={(e) => setExtraChargeAmount(e.target.value)}
+                    className="bg-background flex-1"
                     min="0"
                     step="0.01"
                   />
+                  <Button 
+                    onClick={handleExtraCharge}
+                    disabled={!extraChargeAmount}
+                    className="shrink-0 min-w-[100px]"
+                    size="sm"
+                  >
+                    Extra Charges
+                  </Button>
                 </div>
                 
                 <Button 
                   onClick={handleClearFullBalance}
                   disabled={totalDebt === 0}
-                  variant="outline"
-                  className="w-full"
+                  className="w-full bg-destructive text-destructive-foreground hover:bg-destructive/90"
                   size="sm"
                 >
                   Clear Full Balance
