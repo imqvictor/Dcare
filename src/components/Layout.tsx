@@ -41,9 +41,9 @@ const Layout = ({ children }: LayoutProps) => {
                 navigate("/settings");
               }
             }}
-            className={`transition-all duration-200 ${location.pathname === "/settings" ? "bg-muted rotate-90" : "hover:rotate-45"}`}
+            className={location.pathname === "/settings" ? "bg-muted" : ""}
           >
-            <Settings className="h-5 w-5 transition-transform duration-200" />
+            <Settings className="h-5 w-5" />
           </Button>
         </div>
       </header>
