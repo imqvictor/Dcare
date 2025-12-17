@@ -61,7 +61,7 @@ const ChildProfile = () => {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [partialPaymentAmount, setPartialPaymentAmount] = useState("");
-  const [extraChargeAmount, setExtraChargeAmount] = useState("");
+  const [setDebtAmount, setSetDebtAmount] = useState("");
   const { toast } = useToast();
 
   useEffect(() => {
@@ -186,41 +186,52 @@ const ChildProfile = () => {
     }
   };
 
-  const handleExtraCharge = async () => {
-    const amount = parseFloat(extraChargeAmount);
+  const handleSetDebt = async () => {
+    const newDebtTotal = parseFloat(setDebtAmount);
     
-    if (!amount || amount <= 0) {
+    if (isNaN(newDebtTotal) || newDebtTotal < 0) {
       toast({
         title: "Invalid Amount",
-        description: "Please enter a valid charge amount",
+        description: "Please enter a valid amount",
         variant: "destructive",
       });
       return;
     }
 
     try {
-      const today = new Date().toISOString().split('T')[0];
+      // First, clear all existing debt
+      const paymentsWithDebt = payments.filter(p => Number(p.debt_amount) > 0);
       
-      // Create a new payment record with the extra charge as debt
-      const { error } = await supabase
-        .from("payments")
-        .insert({
-          child_id: childId,
-          amount: amount,
-          payment_date: today,
-          status: "unpaid",
-          debt_amount: amount,
-          note: "Extra charge"
-        });
+      for (const payment of paymentsWithDebt) {
+        const { error } = await supabase
+          .from("payments")
+          .update({ debt_amount: 0, status: "paid" })
+          .eq("id", payment.id);
+        if (error) throw error;
+      }
 
-      if (error) throw error;
+      // If new debt amount is greater than 0, create a new debt record
+      if (newDebtTotal > 0) {
+        const today = new Date().toISOString().split('T')[0];
+        const { error } = await supabase
+          .from("payments")
+          .insert({
+            child_id: childId,
+            amount: newDebtTotal,
+            payment_date: today,
+            status: "unpaid",
+            debt_amount: newDebtTotal,
+            note: "Debt adjustment"
+          });
+        if (error) throw error;
+      }
 
       toast({
         title: "Success",
-        description: `Extra charge of ${formatCurrency(amount)} added successfully.`,
+        description: `Total debt updated to ${formatCurrency(newDebtTotal)}.`,
       });
 
-      setExtraChargeAmount("");
+      setSetDebtAmount("");
       fetchChildData();
     } catch (error: any) {
       toast({
@@ -427,18 +438,18 @@ const ChildProfile = () => {
                 
                 <div className="flex gap-2 items-center">
                   <Button 
-                    onClick={handleExtraCharge}
-                    disabled={!extraChargeAmount}
+                    onClick={handleSetDebt}
+                    disabled={!setDebtAmount}
                     className="shrink-0 min-w-[100px]"
                     size="sm"
                   >
-                    Extra
+                    Paid
                   </Button>
                   <Input
                     type="number"
                     placeholder="Amount"
-                    value={extraChargeAmount}
-                    onChange={(e) => setExtraChargeAmount(e.target.value)}
+                    value={setDebtAmount}
+                    onChange={(e) => setSetDebtAmount(e.target.value)}
                     className="bg-background flex-1"
                     min="0"
                   />
