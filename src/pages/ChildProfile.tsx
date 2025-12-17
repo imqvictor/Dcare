@@ -186,10 +186,10 @@ const ChildProfile = () => {
     }
   };
 
-  const handleSetDebt = async () => {
-    const newDebtTotal = parseFloat(setDebtAmount);
+  const handleExtraCharge = async () => {
+    const enteredAmount = parseFloat(setDebtAmount);
     
-    if (isNaN(newDebtTotal) || newDebtTotal < 0) {
+    if (isNaN(enteredAmount) || enteredAmount < 0) {
       toast({
         title: "Invalid Amount",
         description: "Please enter a valid amount",
@@ -198,37 +198,37 @@ const ChildProfile = () => {
       return;
     }
 
-    try {
-      // First, clear all existing debt
-      const paymentsWithDebt = payments.filter(p => Number(p.debt_amount) > 0);
-      
-      for (const payment of paymentsWithDebt) {
-        const { error } = await supabase
-          .from("payments")
-          .update({ debt_amount: 0, status: "paid" })
-          .eq("id", payment.id);
-        if (error) throw error;
-      }
+    // If entered amount is less than or equal to current debt, show warning
+    if (enteredAmount <= totalDebt) {
+      toast({
+        title: "No Extra Charge",
+        description: `Entered amount (${formatCurrency(enteredAmount)}) is not greater than current debt (${formatCurrency(totalDebt)}). No changes made.`,
+        variant: "destructive",
+      });
+      return;
+    }
 
-      // If new debt amount is greater than 0, create a new debt record
-      if (newDebtTotal > 0) {
-        const today = new Date().toISOString().split('T')[0];
-        const { error } = await supabase
-          .from("payments")
-          .insert({
-            child_id: childId,
-            amount: newDebtTotal,
-            payment_date: today,
-            status: "unpaid",
-            debt_amount: newDebtTotal,
-            note: "Debt adjustment"
-          });
-        if (error) throw error;
-      }
+    // Calculate only the extra amount to add
+    const extraAmount = enteredAmount - totalDebt;
+
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      const { error } = await supabase
+        .from("payments")
+        .insert({
+          child_id: childId,
+          amount: extraAmount,
+          payment_date: today,
+          status: "unpaid",
+          debt_amount: extraAmount,
+          note: "Extra charge"
+        });
+
+      if (error) throw error;
 
       toast({
         title: "Success",
-        description: `Total debt updated to ${formatCurrency(newDebtTotal)}.`,
+        description: `Extra charge of ${formatCurrency(extraAmount)} added. New total debt: ${formatCurrency(enteredAmount)}.`,
       });
 
       setSetDebtAmount("");
@@ -438,12 +438,12 @@ const ChildProfile = () => {
                 
                 <div className="flex gap-2 items-center">
                   <Button 
-                    onClick={handleSetDebt}
+                    onClick={handleExtraCharge}
                     disabled={!setDebtAmount}
                     className="shrink-0 min-w-[100px]"
                     size="sm"
                   >
-                    Paid
+                    Extra
                   </Button>
                   <Input
                     type="number"
