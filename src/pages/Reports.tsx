@@ -178,57 +178,56 @@ const Reports = () => {
         <p className="text-muted-foreground mt-1">View payment summaries, attendance, and debt overview</p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Payment Summary – {new Date().getFullYear()}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ResponsiveContainer width="100%" height={350}>
-            <LineChart data={yearlyData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-              <XAxis 
-                dataKey="month" 
-                tick={{ fill: 'hsl(var(--muted-foreground))' }}
-                axisLine={{ stroke: 'hsl(var(--border))' }}
-              />
-              <YAxis 
-                tick={{ fill: 'hsl(var(--muted-foreground))' }}
-                axisLine={{ stroke: 'hsl(var(--border))' }}
-                tickFormatter={(value) => `Ksh ${value.toLocaleString()}`}
-              />
-              <Tooltip formatter={(value) => formatCurrency(Number(value))} />
-              <Legend />
-              <Line 
-                type="monotone" 
-                dataKey="paid" 
-                name="Paid (Ksh)"
-                stroke="hsl(var(--success))" 
-                strokeWidth={3}
-                dot={{ fill: 'hsl(var(--success))', strokeWidth: 2, r: 4 }}
-                activeDot={{ r: 6, strokeWidth: 2 }}
-              />
-              <Line 
-                type="monotone" 
-                dataKey="debt" 
-                name="Debt (Ksh)"
-                stroke="hsl(var(--destructive))" 
-                strokeWidth={3}
-                dot={{ fill: 'hsl(var(--destructive))', strokeWidth: 2, r: 4 }}
-                activeDot={{ r: 6, strokeWidth: 2 }}
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </CardContent>
-      </Card>
+      <div className="flex flex-col lg:flex-row gap-6">
+        <Card className="flex-1">
+          <CardHeader>
+            <CardTitle>Payment Summary – {new Date().getFullYear()}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={350}>
+              <LineChart data={yearlyData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                <XAxis 
+                  dataKey="month" 
+                  tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                  axisLine={{ stroke: 'hsl(var(--border))' }}
+                />
+                <YAxis 
+                  tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                  axisLine={{ stroke: 'hsl(var(--border))' }}
+                  tickFormatter={(value) => `Ksh ${value.toLocaleString()}`}
+                />
+                <Tooltip formatter={(value) => formatCurrency(Number(value))} />
+                <Legend />
+                <Line 
+                  type="monotone" 
+                  dataKey="paid" 
+                  name="Paid (Ksh)"
+                  stroke="hsl(var(--success))" 
+                  strokeWidth={3}
+                  dot={{ fill: 'hsl(var(--success))', strokeWidth: 2, r: 4 }}
+                  activeDot={{ r: 6, strokeWidth: 2 }}
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="debt" 
+                  name="Debt (Ksh)"
+                  stroke="hsl(var(--destructive))" 
+                  strokeWidth={3}
+                  dot={{ fill: 'hsl(var(--destructive))', strokeWidth: 2, r: 4 }}
+                  activeDot={{ r: 6, strokeWidth: 2 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
 
-      <div className="grid md:grid-cols-2 gap-6">
-
-        <Card>
+        <Card className="lg:w-[400px]">
           <CardHeader>
             <CardTitle>Attendance Overview</CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer width="100%" height={350}>
               <PieChart>
                 <Pie
                   data={attendanceData}
