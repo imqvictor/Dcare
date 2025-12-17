@@ -406,16 +406,6 @@ const ChildProfile = () => {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex gap-2 items-center">
-                  <Input
-                    type="number"
-                    placeholder="Amount"
-                    value={partialPaymentAmount}
-                    onChange={(e) => setPartialPaymentAmount(e.target.value)}
-                    disabled={totalDebt === 0}
-                    className="bg-background flex-1"
-                    min="0"
-                    step="0.01"
-                  />
                   <Button 
                     onClick={handlePartialPayment}
                     disabled={totalDebt === 0 || !partialPaymentAmount}
@@ -424,9 +414,26 @@ const ChildProfile = () => {
                   >
                     Pay
                   </Button>
+                  <Input
+                    type="number"
+                    placeholder="Amount"
+                    value={partialPaymentAmount}
+                    onChange={(e) => setPartialPaymentAmount(e.target.value)}
+                    disabled={totalDebt === 0}
+                    className="bg-background flex-1"
+                    min="0"
+                  />
                 </div>
                 
                 <div className="flex gap-2 items-center">
+                  <Button 
+                    onClick={handleExtraCharge}
+                    disabled={!extraChargeAmount}
+                    className="shrink-0 min-w-[100px]"
+                    size="sm"
+                  >
+                    Extra
+                  </Button>
                   <Input
                     type="number"
                     placeholder="Amount"
@@ -434,16 +441,7 @@ const ChildProfile = () => {
                     onChange={(e) => setExtraChargeAmount(e.target.value)}
                     className="bg-background flex-1"
                     min="0"
-                    step="0.01"
                   />
-                  <Button 
-                    onClick={handleExtraCharge}
-                    disabled={!extraChargeAmount}
-                    className="shrink-0 min-w-[100px]"
-                    size="sm"
-                  >
-                    Extra Charges
-                  </Button>
                 </div>
                 
                 <Button 
