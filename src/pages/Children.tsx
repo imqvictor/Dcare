@@ -103,13 +103,23 @@ const Children = () => {
       if (error) throw error;
 
       const attendanceMap: TodayAttendance = {};
+      // Filter out Extra records (they have note="Extra" and attendance_status=null)
+      // Only consider records with actual attendance status for button state
       data?.forEach((payment) => {
-        attendanceMap[payment.child_id] = {
-          present: payment.attendance_status === "present",
-          absent: payment.attendance_status === "absent",
-          paid: payment.status === "paid",
-          unpaid: payment.status === "unpaid", // Only true when explicitly set to unpaid
-        };
+        // Skip Extra records - they should not affect button states
+        if (payment.note === "Extra" && payment.attendance_status === null) {
+          return;
+        }
+        
+        // Only update if this is an attendance record or if no record exists yet
+        if (payment.attendance_status !== null || !attendanceMap[payment.child_id]) {
+          attendanceMap[payment.child_id] = {
+            present: payment.attendance_status === "present",
+            absent: payment.attendance_status === "absent",
+            paid: payment.status === "paid",
+            unpaid: payment.status === "unpaid",
+          };
+        }
       });
 
       setAttendance(attendanceMap);
