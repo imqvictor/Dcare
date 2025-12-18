@@ -219,9 +219,10 @@ const ChildProfile = () => {
           child_id: childId,
           amount: extraAmount,
           payment_date: today,
-          status: "unpaid",
+          status: "pending",
           debt_amount: extraAmount,
-          note: "Extra charge"
+          attendance_status: null,
+          note: "Extra"
         });
 
       if (error) throw error;
