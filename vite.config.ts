@@ -31,8 +31,8 @@ export default defineConfig(({ mode }) => ({
         ],
       },
       manifest: {
-        name: "Smart Daycare",
-        short_name: "Smart Daycare",
+        name: "Daycare",
+        short_name: "Daycare",
         description: "Professional daycare management system for tracking children and payments",
         theme_color: "#1a1a2e",
         background_color: "#1a1a2e",
