@@ -195,6 +195,16 @@ const Auth = () => {
               </Button>
             </TabsContent>
           </Tabs>
+          {canInstall && (
+            <Button
+              variant="outline"
+              onClick={install}
+              className="mt-4 w-full gap-2"
+            >
+              <Download className="h-4 w-4" />
+              Install App
+            </Button>
+          )}
         </CardContent>
       </Card>
     </div>
