@@ -11,6 +11,7 @@ interface LayoutProps {
 const Layout = ({ children }: LayoutProps) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { canInstall, install } = usePwaInstall();
 
   const navItems = [
     { path: "/dashboard", label: "Dashboard", icon: BarChart3 },
