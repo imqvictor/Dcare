@@ -33,20 +33,33 @@ const Layout = ({ children }: LayoutProps) => {
               <p className="text-xs text-muted-foreground">Admin Portal</p>
             </div>
           </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => {
-              if (location.pathname === "/settings") {
-                navigate(-1);
-              } else {
-                navigate("/settings");
-              }
-            }}
-            className={location.pathname === "/settings" ? "bg-muted" : ""}
-          >
-            <Settings className="h-5 w-5" />
-          </Button>
+          <div className="flex items-center gap-2">
+            {canInstall && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={install}
+                className="gap-1.5"
+              >
+                <Download className="h-4 w-4" />
+                <span className="hidden sm:inline">Install App</span>
+              </Button>
+            )}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => {
+                if (location.pathname === "/settings") {
+                  navigate(-1);
+                } else {
+                  navigate("/settings");
+                }
+              }}
+              className={location.pathname === "/settings" ? "bg-muted" : ""}
+            >
+              <Settings className="h-5 w-5" />
+            </Button>
+          </div>
         </div>
       </header>
 
