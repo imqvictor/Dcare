@@ -22,6 +22,7 @@ const Auth = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { canInstall, install } = usePwaInstall();
 
   useEffect(() => {
     // Check if user is already logged in
