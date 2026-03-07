@@ -7,7 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Baby, Lock, Mail } from "lucide-react";
+import { Baby, Lock, Mail, Download } from "lucide-react";
+import { usePwaInstall } from "@/hooks/use-pwa-install";
 import { z } from "zod";
 
 const authSchema = z.object({
@@ -21,6 +22,7 @@ const Auth = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { canInstall, install } = usePwaInstall();
 
   useEffect(() => {
     // Check if user is already logged in
@@ -193,6 +195,16 @@ const Auth = () => {
               </Button>
             </TabsContent>
           </Tabs>
+          {canInstall && (
+            <Button
+              variant="outline"
+              onClick={install}
+              className="mt-4 w-full gap-2"
+            >
+              <Download className="h-4 w-4" />
+              Install App
+            </Button>
+          )}
         </CardContent>
       </Card>
     </div>
