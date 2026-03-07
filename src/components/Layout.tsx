@@ -1,7 +1,8 @@
 import { ReactNode } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Baby, Users, DollarSign, BarChart3, Settings } from "lucide-react";
+import { Baby, Users, DollarSign, BarChart3, Settings, Download } from "lucide-react";
+import { usePwaInstall } from "@/hooks/use-pwa-install";
 
 interface LayoutProps {
   children: ReactNode;
@@ -10,6 +11,7 @@ interface LayoutProps {
 const Layout = ({ children }: LayoutProps) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { canInstall, install } = usePwaInstall();
 
   const navItems = [
     { path: "/dashboard", label: "Dashboard", icon: BarChart3 },
@@ -31,20 +33,33 @@ const Layout = ({ children }: LayoutProps) => {
               <p className="text-xs text-muted-foreground">Admin Portal</p>
             </div>
           </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => {
-              if (location.pathname === "/settings") {
-                navigate(-1);
-              } else {
-                navigate("/settings");
-              }
-            }}
-            className={location.pathname === "/settings" ? "bg-muted" : ""}
-          >
-            <Settings className="h-5 w-5" />
-          </Button>
+          <div className="flex items-center gap-2">
+            {canInstall && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={install}
+                className="gap-1.5"
+              >
+                <Download className="h-4 w-4" />
+                <span className="hidden sm:inline">Install App</span>
+              </Button>
+            )}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => {
+                if (location.pathname === "/settings") {
+                  navigate(-1);
+                } else {
+                  navigate("/settings");
+                }
+              }}
+              className={location.pathname === "/settings" ? "bg-muted" : ""}
+            >
+              <Settings className="h-5 w-5" />
+            </Button>
+          </div>
         </div>
       </header>
 
