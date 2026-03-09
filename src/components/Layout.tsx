@@ -89,6 +89,7 @@ const Layout = ({ children }: LayoutProps) => {
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-6">{children}</main>
+      <InstallGuideModal open={showManualGuide} onOpenChange={setShowManualGuide} isSamsungBrowser={isSamsungBrowser} />
     </div>
   );
 };
