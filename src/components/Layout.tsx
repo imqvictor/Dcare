@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Baby, Users, DollarSign, BarChart3, Settings, Download } from "lucide-react";
 import { usePwaInstall } from "@/hooks/use-pwa-install";
+import InstallGuideModal from "@/components/InstallGuideModal";
 
 interface LayoutProps {
   children: ReactNode;
@@ -11,7 +12,7 @@ interface LayoutProps {
 const Layout = ({ children }: LayoutProps) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { canInstall, install } = usePwaInstall();
+  const { canInstall, install, showManualGuide, setShowManualGuide, isSamsungBrowser } = usePwaInstall();
 
   const navItems = [
     { path: "/dashboard", label: "Dashboard", icon: BarChart3 },
@@ -88,6 +89,7 @@ const Layout = ({ children }: LayoutProps) => {
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-6">{children}</main>
+      <InstallGuideModal open={showManualGuide} onOpenChange={setShowManualGuide} isSamsungBrowser={isSamsungBrowser} />
     </div>
   );
 };
