@@ -23,7 +23,7 @@ const Auth = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { canInstall, install } = usePwaInstall();
+  const { canInstall, install, showManualGuide, setShowManualGuide, isSamsungBrowser } = usePwaInstall();
 
   useEffect(() => {
     // Check if user is already logged in
