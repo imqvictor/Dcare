@@ -208,6 +208,7 @@ const Auth = () => {
           )}
         </CardContent>
       </Card>
+      <InstallGuideModal open={showManualGuide} onOpenChange={setShowManualGuide} isSamsungBrowser={isSamsungBrowser} />
     </div>
   );
 };
