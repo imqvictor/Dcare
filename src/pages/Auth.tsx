@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Baby, Lock, Mail, Download } from "lucide-react";
 import { usePwaInstall } from "@/hooks/use-pwa-install";
+import InstallGuideModal from "@/components/InstallGuideModal";
 import { z } from "zod";
 
 const authSchema = z.object({
