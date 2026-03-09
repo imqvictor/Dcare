@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Baby, Users, DollarSign, BarChart3, Settings, Download } from "lucide-react";
 import { usePwaInstall } from "@/hooks/use-pwa-install";
+import InstallGuideModal from "@/components/InstallGuideModal";
 
 interface LayoutProps {
   children: ReactNode;
